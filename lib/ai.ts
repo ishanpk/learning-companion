@@ -20,7 +20,7 @@ export const DEFAULT_GENERATION_CONFIG = {
  */
 export function getAIModel(schema: any) {
   return genAI.getGenerativeModel({
-    model: 'gemini-1.5-flash-latest',
+    model: 'gemini-2.0-flash',
     generationConfig: {
       ...DEFAULT_GENERATION_CONFIG,
       responseMimeType: 'application/json',
