@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
-import { ArrowLeft, ArrowRight, CheckCircle2, XCircle, Sparkles, ToggleLeft, ToggleRight, Terminal, FileQuestion } from "lucide-react"
+import { ArrowLeft, ArrowRight, CheckCircle2, XCircle, Sparkles, Terminal, FileQuestion, Trophy } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface QuizViewProps {
@@ -113,20 +113,20 @@ export function QuizView({ onBack, onComplete, onSwitchToScenario }: QuizViewPro
 
   if (isComplete) {
     return (
-      <div className="flex-1 flex items-center justify-center p-6">
-        <Card className="max-w-lg w-full border-border/50 bg-card/50 backdrop-blur-xl">
+      <div className="flex-1 flex items-center justify-center p-6 bg-background">
+        <Card className="max-w-md w-full border-border/60 bg-card shadow-lg">
           <CardContent className="p-8 text-center">
-            <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-              <Sparkles className="w-10 h-10 text-primary-foreground" />
+            <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-primary/10 flex items-center justify-center">
+              <Trophy className="w-10 h-10 text-primary" />
             </div>
             <h2 className="text-2xl font-bold text-foreground mb-2">
               Quiz Complete!
             </h2>
             <p className="text-muted-foreground mb-6">
-              {"You've finished the assessment for this lesson."}
+              Great job on finishing the assessment!
             </p>
             
-            <div className="bg-secondary/50 rounded-xl p-6 mb-6">
+            <div className="bg-secondary/50 rounded-2xl p-6 mb-6">
               <div className="text-5xl font-bold text-primary mb-2">{score}%</div>
               <p className="text-sm text-muted-foreground">
                 {correctAnswers} of {questions.length} correct
@@ -137,13 +137,13 @@ export function QuizView({ onBack, onComplete, onSwitchToScenario }: QuizViewPro
               <Button
                 variant="outline"
                 onClick={onBack}
-                className="flex-1 border-border/50"
+                className="flex-1 border-border/60 rounded-xl cursor-pointer"
               >
-                Back to Study
+                Review Lesson
               </Button>
               <Button
                 onClick={onComplete}
-                className="flex-1 bg-gradient-to-r from-primary to-accent hover:opacity-90 text-primary-foreground"
+                className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl cursor-pointer shadow-md shadow-primary/15"
               >
                 Continue
               </Button>
@@ -155,32 +155,32 @@ export function QuizView({ onBack, onComplete, onSwitchToScenario }: QuizViewPro
   }
 
   return (
-    <div className="flex-1 overflow-auto">
-      <div className="max-w-2xl mx-auto p-6 lg:p-8 pb-24 lg:pb-8">
+    <div className="flex-1 overflow-auto bg-background">
+      <div className="max-w-2xl mx-auto p-6 lg:p-8 pb-28 lg:pb-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <button
             onClick={onBack}
-            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors duration-200 cursor-pointer"
           >
             <ArrowLeft className="w-5 h-5" />
-            <span className="text-sm font-medium">Back to Lesson</span>
+            <span className="text-sm font-semibold">Back to Lesson</span>
           </button>
 
           {/* Mode Toggle */}
           {onSwitchToScenario && (
-            <div className="flex items-center gap-2 bg-secondary/50 rounded-lg p-1">
+            <div className="flex items-center gap-1 bg-secondary/50 rounded-xl p-1">
               <button
                 onClick={() => setQuizMode("standard")}
                 className={cn(
-                  "flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all",
+                  "flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-200 cursor-pointer",
                   quizMode === "standard"
-                    ? "bg-primary text-primary-foreground"
+                    ? "bg-primary text-primary-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 <FileQuestion className="w-4 h-4" />
-                Standard Quiz
+                Quiz
               </button>
               <button
                 onClick={() => {
@@ -188,14 +188,14 @@ export function QuizView({ onBack, onComplete, onSwitchToScenario }: QuizViewPro
                   onSwitchToScenario()
                 }}
                 className={cn(
-                  "flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all",
+                  "flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-200 cursor-pointer",
                   quizMode === "scenario"
-                    ? "bg-accent text-accent-foreground"
+                    ? "bg-accent text-accent-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 <Terminal className="w-4 h-4" />
-                Scenario Mode
+                Scenario
               </button>
             </div>
           )}
@@ -203,25 +203,25 @@ export function QuizView({ onBack, onComplete, onSwitchToScenario }: QuizViewPro
 
         {/* Progress */}
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-foreground">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-sm font-semibold text-foreground">
               Question {currentQuestion + 1} of {questions.length}
             </span>
-            <span className="text-sm text-muted-foreground">
+            <span className="text-sm text-muted-foreground font-medium">
               {totalAnswered > 0 && `${correctAnswers}/${totalAnswered} correct`}
             </span>
           </div>
-          <Progress value={progress} className="h-2" />
+          <Progress value={progress} className="h-2.5 rounded-full" />
         </div>
 
         {/* Question Card */}
-        <Card className="border-border/50 bg-card/50 backdrop-blur-xl">
-          <CardHeader>
-            <CardTitle className="text-xl font-semibold text-foreground leading-relaxed">
+        <Card className="border-border/60 bg-card shadow-sm">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-xl font-bold text-foreground leading-relaxed">
               {question.question}
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-3 pt-0">
             {question.options.map((option, index) => {
               const isSelected = selectedAnswer === index
               const isCorrectAnswer = index === question.correct
@@ -232,20 +232,20 @@ export function QuizView({ onBack, onComplete, onSwitchToScenario }: QuizViewPro
                   onClick={() => handleSelect(index)}
                   disabled={showResult}
                   className={cn(
-                    "w-full text-left p-4 rounded-xl border-2 transition-all duration-200",
-                    "flex items-center gap-3",
-                    !showResult && !isSelected && "border-border/50 hover:border-primary/30 hover:bg-primary/5",
+                    "w-full text-left p-4 rounded-xl border-2 transition-all duration-200 cursor-pointer",
+                    "flex items-center gap-4",
+                    !showResult && !isSelected && "border-border/60 hover:border-primary/40 hover:bg-primary/5",
                     !showResult && isSelected && "border-primary bg-primary/10",
-                    showResult && isCorrectAnswer && "border-accent bg-accent/10",
+                    showResult && isCorrectAnswer && "border-primary bg-primary/10",
                     showResult && isSelected && !isCorrectAnswer && "border-destructive bg-destructive/10"
                   )}
                 >
                   <div
                     className={cn(
-                      "w-8 h-8 rounded-full border-2 flex items-center justify-center shrink-0 text-sm font-medium",
+                      "w-9 h-9 rounded-full border-2 flex items-center justify-center shrink-0 text-sm font-bold transition-all duration-200",
                       !showResult && !isSelected && "border-border text-muted-foreground",
                       !showResult && isSelected && "border-primary bg-primary text-primary-foreground",
-                      showResult && isCorrectAnswer && "border-accent bg-accent text-accent-foreground",
+                      showResult && isCorrectAnswer && "border-primary bg-primary text-primary-foreground",
                       showResult && isSelected && !isCorrectAnswer && "border-destructive bg-destructive text-destructive-foreground"
                     )}
                   >
@@ -259,8 +259,8 @@ export function QuizView({ onBack, onComplete, onSwitchToScenario }: QuizViewPro
                   </div>
                   <span
                     className={cn(
-                      "text-foreground/90",
-                      showResult && isCorrectAnswer && "text-accent font-medium",
+                      "text-foreground/90 font-medium",
+                      showResult && isCorrectAnswer && "text-primary",
                       showResult && isSelected && !isCorrectAnswer && "text-destructive"
                     )}
                   >
@@ -272,20 +272,35 @@ export function QuizView({ onBack, onComplete, onSwitchToScenario }: QuizViewPro
           </CardContent>
         </Card>
 
+        {/* Feedback Message */}
+        {showResult && (
+          <div className={cn(
+            "mt-4 p-4 rounded-xl",
+            isCorrect ? "bg-primary/10 border border-primary/20" : "bg-accent/10 border border-accent/20"
+          )}>
+            <p className={cn(
+              "text-sm font-medium",
+              isCorrect ? "text-primary" : "text-accent"
+            )}>
+              {isCorrect ? "Excellent! That&apos;s correct." : "Not quite, but don&apos;t worry - learning from mistakes is part of the journey!"}
+            </p>
+          </div>
+        )}
+
         {/* Actions */}
         <div className="mt-6 flex justify-end">
           {!showResult ? (
             <Button
               onClick={handleSubmit}
               disabled={selectedAnswer === null}
-              className="px-8 bg-gradient-to-r from-primary to-accent hover:opacity-90 text-primary-foreground disabled:opacity-50"
+              className="px-8 bg-primary hover:bg-primary/90 text-primary-foreground disabled:opacity-50 rounded-xl cursor-pointer shadow-md shadow-primary/15"
             >
               Submit Answer
             </Button>
           ) : (
             <Button
               onClick={handleNext}
-              className="px-8 bg-gradient-to-r from-primary to-accent hover:opacity-90 text-primary-foreground"
+              className="px-8 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl cursor-pointer shadow-md shadow-primary/15"
             >
               {currentQuestion < questions.length - 1 ? (
                 <>

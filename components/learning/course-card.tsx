@@ -28,44 +28,41 @@ export function CourseCard({
   onResume,
 }: CourseCardProps) {
   return (
-    <Card className="group relative overflow-hidden border-border/50 bg-card/50 backdrop-blur-sm hover:border-primary/30 transition-all duration-300 hover:shadow-xl hover:shadow-primary/5">
-      {/* Glassmorphism highlight */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-      
+    <Card className="group relative overflow-hidden border-border/60 bg-card hover:border-primary/40 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5">
       <CardContent className="relative p-6">
-        <div className="flex items-start gap-4">
+        <div className="flex items-start gap-5">
           {/* Progress Ring */}
-          <ProgressRing progress={progress} size={72} strokeWidth={5} />
+          <ProgressRing progress={progress} size={76} strokeWidth={6} />
 
           {/* Content */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-2">
-              <Badge variant="secondary" className="text-xs bg-primary/10 text-primary border-primary/20">
+              <Badge variant="secondary" className="text-xs font-semibold bg-primary/10 text-primary border-0 rounded-full px-3">
                 {category}
               </Badge>
               {streak > 0 && (
-                <div className="flex items-center gap-1 text-orange-400">
-                  <Flame className="w-4 h-4 fill-orange-400" />
-                  <span className="text-xs font-semibold">{streak} day streak</span>
+                <div className="flex items-center gap-1.5 text-amber-500 bg-amber-50 px-2.5 py-1 rounded-full">
+                  <Flame className="w-4 h-4 fill-amber-400" />
+                  <span className="text-xs font-bold">{streak} days</span>
                 </div>
               )}
             </div>
 
-            <h3 className="font-semibold text-lg text-foreground truncate mb-1">
+            <h3 className="font-bold text-lg text-foreground truncate mb-1.5">
               {title}
             </h3>
-            <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
+            <p className="text-sm text-muted-foreground line-clamp-2 mb-4 leading-relaxed">
               {description}
             </p>
 
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                <div className="flex items-center gap-1">
-                  <BookOpen className="w-3.5 h-3.5" />
+              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                <div className="flex items-center gap-1.5">
+                  <BookOpen className="w-4 h-4" />
                   <span>{lessonsLeft} lessons left</span>
                 </div>
-                <div className="flex items-center gap-1">
-                  <Clock className="w-3.5 h-3.5" />
+                <div className="flex items-center gap-1.5">
+                  <Clock className="w-4 h-4" />
                   <span>{estimatedTime}</span>
                 </div>
               </div>
@@ -73,10 +70,10 @@ export function CourseCard({
               <Button 
                 size="sm" 
                 onClick={onResume}
-                className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground shadow-lg shadow-primary/20 group-hover:shadow-primary/30 transition-all duration-300"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm hover:shadow-md shadow-primary/10 transition-all duration-200 rounded-xl cursor-pointer px-5"
               >
-                <Play className="w-3.5 h-3.5 mr-1.5 fill-current" />
-                Resume
+                <Play className="w-4 h-4 mr-1.5 fill-current" />
+                Continue
               </Button>
             </div>
           </div>
