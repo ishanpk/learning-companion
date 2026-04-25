@@ -1,35 +1,35 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useEffect, useCallback } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Play, Pause, RotateCcw, Timer, Coffee } from "lucide-react"
 import { cn } from "@/lib/utils"
-
-const FOCUS_TIME = 25 * 60 // 25 minutes in seconds
+import { useTimerStore } from "@/store/useTimerStore"
 
 export function FocusTimer() {
-  const [timeLeft, setTimeLeft] = useState(FOCUS_TIME)
-  const [isRunning, setIsRunning] = useState(false)
+  // PERFORMANCE: Use selectors to prevent re-rendering when other parts of the store change
+  const timeLeft = useTimerStore((s) => s.timeLeft)
+  const isRunning = useTimerStore((s) => s.isRunning)
+  const focusTime = useTimerStore((s) => s.focusTime)
+  const startTimer = useTimerStore((s) => s.startTimer)
+  const pauseTimer = useTimerStore((s) => s.pauseTimer)
+  const resetTimer = useTimerStore((s) => s.resetTimer)
+  const tickTimer = useTimerStore((s) => s.tickTimer)
 
   const minutes = Math.floor(timeLeft / 60)
   const seconds = timeLeft % 60
-  const progress = ((FOCUS_TIME - timeLeft) / FOCUS_TIME) * 100
-
-  const reset = useCallback(() => {
-    setIsRunning(false)
-    setTimeLeft(FOCUS_TIME)
-  }, [])
+  const progress = ((focusTime - timeLeft) / focusTime) * 100
 
   useEffect(() => {
     if (!isRunning || timeLeft <= 0) return
 
     const interval = setInterval(() => {
-      setTimeLeft((prev) => prev - 1)
+      tickTimer()
     }, 1000)
 
     return () => clearInterval(interval)
-  }, [isRunning, timeLeft])
+  }, [isRunning, timeLeft, tickTimer])
 
   return (
     <Card className="border-border/60 bg-card shadow-sm">
@@ -73,7 +73,7 @@ export function FocusTimer() {
             </defs>
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-3xl font-bold text-foreground tabular-nums">
+            <span className="text-3xl font-bold text-foreground tabular-nums" aria-live="off">
               {String(minutes).padStart(2, "0")}:{String(seconds).padStart(2, "0")}
             </span>
             <span className="text-xs text-muted-foreground mt-1">minutes</span>
@@ -85,16 +85,16 @@ export function FocusTimer() {
           <Button
             variant="outline"
             size="icon"
-            onClick={reset}
-            aria-label="Reset timer"
+            onClick={resetTimer}
+            aria-label="Reset focus timer"
             className="border-border/60 hover:bg-secondary rounded-xl cursor-pointer"
           >
             <RotateCcw className="w-4 h-4" />
           </Button>
           <Button
             size="lg"
-            onClick={() => setIsRunning(!isRunning)}
-            aria-label={isRunning ? 'Pause timer' : 'Start timer'}
+            onClick={() => isRunning ? pauseTimer() : startTimer()}
+            aria-label={isRunning ? 'Pause focus timer' : 'Start focus timer'}
             className={cn(
               "px-8 rounded-xl transition-all duration-200 cursor-pointer shadow-md",
               isRunning

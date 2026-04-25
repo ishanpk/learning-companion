@@ -36,7 +36,6 @@ export const useSkillStore = create<SkillState>((set, get) => ({
           set({ skills: data.skills });
         }
       } else {
-        // First visit: seed defaults
         await saveToFirestore({ skills: defaultSkills });
       }
       set({ isLoaded: true });
@@ -47,14 +46,27 @@ export const useSkillStore = create<SkillState>((set, get) => ({
   },
 
   updateSkillXp: (skillId, xpGained) => {
-    const newSkills = get().skills.map((skill) => {
+    const currentSkills = get().skills;
+    
+    // Count how many skills are already evolved
+    const evolvedCount = currentSkills.filter(s => s.isEvolved).length;
+
+    const newSkills = currentSkills.map((skill) => {
       if (skill.id !== skillId) return skill;
+      
+      // XP logic
       const newXp = Math.min(skill.xp + xpGained, skill.xpToNext);
       const leveled = newXp >= skill.xpToNext && skill.level < skill.maxLevel;
       const newLevel = leveled ? Math.min(skill.level + 1, skill.maxLevel) : skill.level;
-      const isEvolved = newLevel >= skill.maxLevel;
+      
+      // Evolution logic: only evolve if under the limit of 2, OR if already evolved
+      const shouldEvolve = newLevel >= skill.maxLevel;
+      const canEvolve = skill.isEvolved || evolvedCount < 2;
+      const isEvolved = shouldEvolve && canEvolve;
+      
       return { ...skill, xp: newXp, level: newLevel, isEvolved };
     });
+
     set({ skills: newSkills });
     saveToFirestore({ skills: newSkills });
   },

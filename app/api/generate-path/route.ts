@@ -1,15 +1,36 @@
 import { GoogleGenAI, Type, Schema } from '@google/genai';
 import { NextResponse } from 'next/server';
 
+// Phase 2: Switch to Edge Runtime for faster TTFB and lower cold starts
+export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
+
+/**
+ * Simple in-memory rate limiting for the Edge runtime (per region)
+ */
+const rateLimitMap = new Map<string, number>();
 
 export async function POST(req: Request) {
   try {
+    const { topic } = await req.json();
+    
+    // Basic Rate Limiting: 5 requests per minute per IP
+    const ip = req.headers.get('x-forwarded-for') || 'anon';
+    const now = Date.now();
+    const lastRequest = rateLimitMap.get(ip) || 0;
+    if (now - lastRequest < 12000) { // 12 seconds between requests
+      return NextResponse.json({ error: "Rate limit exceeded. Please wait a few seconds." }, { status: 429 });
+    }
+    rateLimitMap.set(ip, now);
+
+    if (!topic || topic.length < 2) {
+      return NextResponse.json({ error: "Invalid topic provided." }, { status: 400 });
+    }
+
     const ai = new GoogleGenAI({
       apiKey: process.env.GEMINI_API_KEY!,
     });
 
-    const { topic } = await req.json();
     console.log(`[API] Generating path for topic: ${topic}`);
 
     const responseSchema: Schema = {
@@ -47,23 +68,34 @@ export async function POST(req: Request) {
       required: ["courseTitle", "modules"],
     };
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: `Create a learning path and course modules for the topic: "${topic}".`,
-      config: {
+    const model = ai.getGenerativeModel({
+      model: 'gemini-1.5-flash', // Using latest stable model name
+      generationConfig: {
         responseMimeType: 'application/json',
         responseSchema: responseSchema,
       },
     });
 
-    if (!response.text) {
-      throw new Error("No text generated.");
+    const result = await model.generateContent(`Create a comprehensive learning path and detailed course modules for the topic: "${topic}".`);
+    const response = await result.response;
+    const text = response.text();
+
+    if (!text) {
+      throw new Error("Gemini returned an empty response.");
     }
 
-    const data = JSON.parse(response.text);
+    const data = JSON.parse(text);
     return NextResponse.json(data);
+
   } catch (error: any) {
     console.error("[API] Error generating path:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    
+    // Phase 2: Structured error handling
+    const status = error.message?.includes("Rate limit") ? 429 : 500;
+    return NextResponse.json({ 
+      error: "AI Generation Failed", 
+      details: error.message,
+      suggestion: "Try a more specific topic or check your internet connection."
+    }, { status });
   }
 }

@@ -18,7 +18,7 @@ export const useTimerStore = create<TimerState>((set) => ({
   pauseTimer: () => set({ isRunning: false }),
   resetTimer: () => set((state) => ({ isRunning: false, timeLeft: state.focusTime })),
   tickTimer: () => set((state) => {
-    if (!state.isRunning || state.timeLeft <= 0) return state;
+    if (!state.isRunning || state.timeLeft <= 0) return {}; // Return empty object to prevent re-render if nothing changes
     return { timeLeft: state.timeLeft - 1 };
   }),
 }));

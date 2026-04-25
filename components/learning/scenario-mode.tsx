@@ -254,6 +254,8 @@ export function ScenarioMode({ onBack, onComplete }: ScenarioModeProps) {
               {!submitted && (
                 <button
                   onClick={() => setShowHint(!showHint)}
+                  aria-expanded={showHint}
+                  aria-controls="scenario-hint"
                   className="flex items-center gap-2 text-sm text-primary hover:underline cursor-pointer font-medium"
                 >
                   <Lightbulb className="w-4 h-4" />
@@ -262,7 +264,7 @@ export function ScenarioMode({ onBack, onComplete }: ScenarioModeProps) {
               )}
               
               {showHint && !submitted && (
-                <div className="bg-primary/5 border border-primary/20 rounded-xl p-4">
+                <div id="scenario-hint" className="bg-primary/5 border border-primary/20 rounded-xl p-4">
                   <p className="text-sm text-foreground/80">{scenario.hint}</p>
                 </div>
               )}

@@ -1,45 +1,39 @@
-import { GoogleGenAI, Type, Schema } from '@google/genai';
+import { GoogleGenAI } from '@google/genai';
 import { NextResponse } from 'next/server';
 
+export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
+    const { solution, scenarioId } = await req.json();
+
+    if (!solution) {
+      return NextResponse.json({ error: "No solution provided" }, { status: 400 });
+    }
+
     const ai = new GoogleGenAI({
       apiKey: process.env.GEMINI_API_KEY!,
     });
 
-    const { scenario, userAction } = await req.json();
+    const model = ai.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
-    const responseSchema: Schema = {
-      type: Type.OBJECT,
-      properties: {
-        success: { type: Type.BOOLEAN, description: "Whether the user's action successfully resolves the scenario" },
-        feedback: { type: Type.STRING, description: "Constructive feedback on the user's action" },
-      },
-      required: ["success", "feedback"],
-    };
+    const prompt = `
+      You are an expert code reviewer. A student has submitted a fix for a coding scenario.
+      Scenario ID: ${scenarioId}
+      User's Solution: "${solution}"
+      
+      Evaluate the solution. Is it correct? Provide a brief explanation and a score (0-100).
+      Return as JSON: { "isCorrect": boolean, "explanation": string, "score": number }
+    `;
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: `Evaluate the user's action for the given broken system scenario.
-      Scenario: ${scenario}
-      User Action: ${userAction}
-      Determine if the action successfully fixes the problem and provide feedback.`,
-      config: {
-        responseMimeType: 'application/json',
-        responseSchema: responseSchema,
-      },
-    });
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const data = JSON.parse(response.text());
 
-    if (!response.text) {
-      throw new Error("No text generated.");
-    }
-
-    const data = JSON.parse(response.text);
     return NextResponse.json(data);
   } catch (error: any) {
-    console.error("Error checking scenario:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("[API] Scenario Check Error:", error);
+    return NextResponse.json({ error: "Evaluation failed", details: error.message }, { status: 500 });
   }
 }
