@@ -86,6 +86,7 @@ export function FocusTimer() {
             variant="outline"
             size="icon"
             onClick={reset}
+            aria-label="Reset timer"
             className="border-border/60 hover:bg-secondary rounded-xl cursor-pointer"
           >
             <RotateCcw className="w-4 h-4" />
@@ -93,6 +94,7 @@ export function FocusTimer() {
           <Button
             size="lg"
             onClick={() => setIsRunning(!isRunning)}
+            aria-label={isRunning ? 'Pause timer' : 'Start timer'}
             className={cn(
               "px-8 rounded-xl transition-all duration-200 cursor-pointer shadow-md",
               isRunning
@@ -112,6 +114,11 @@ export function FocusTimer() {
               </>
             )}
           </Button>
+        </div>
+
+        {/* Screen reader announcement for timer completion */}
+        <div aria-live="polite" aria-atomic="true" className="sr-only">
+          {timeLeft === 0 && "Focus session complete. Great work! Take a short break."}
         </div>
 
         {/* Break reminder */}

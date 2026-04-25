@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeAll } from 'vitest';
 
 // Mock Firebase to avoid actual Firestore calls in tests
 vi.mock('@/lib/firebase', () => ({
@@ -12,8 +12,13 @@ vi.mock('firebase/firestore', () => ({
   serverTimestamp: vi.fn(() => new Date()),
 }));
 
-// Must import AFTER mocks are set up
-const { useStudyStore } = await import('@/store/useStudyStore');
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let useStudyStore: any;
+
+beforeAll(async () => {
+  const mod = await import('@/store/useStudyStore');
+  useStudyStore = mod.useStudyStore;
+});
 
 describe('useStudyStore', () => {
   describe('Loadout Constraints', () => {
@@ -113,7 +118,7 @@ describe('useStudyStore', () => {
   describe('Skill XP', () => {
     it('awards XP to a skill', () => {
       useStudyStore.getState().updateSkillXp('8', 50); // Database Optimization starts at 80/150
-      const skill = useStudyStore.getState().skills.find((s) => s.id === '8');
+      const skill = useStudyStore.getState().skills.find((s: { id: string }) => s.id === '8');
       expect(skill!.xp).toBe(130);
     });
   });

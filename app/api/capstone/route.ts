@@ -1,38 +1,50 @@
+import { GoogleGenAI, Type, Schema } from '@google/genai';
 import { NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 
-// Initialize Gemini
-const apiKey = process.env.GEMINI_API_KEY || 'AIzaSyCwmEBt-Aij0NwTuqqCp5gzz9R3O8VvjnQ';
-const genAI = new GoogleGenerativeAI(apiKey);
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-    
-    const prompt = `Generate exactly 3 diverse software development capstone projects for a student.
-    Return ONLY a JSON array of objects with the following schema:
-    [
-      {
-        "id": "unique string",
-        "title": "Project Title",
-        "description": "2-3 sentences describing the project.",
-        "difficulty": "Beginner" | "Intermediate" | "Advanced",
-        "estimatedHours": number,
-        "skills": ["Skill 1", "Skill 2", "Skill 3"],
-        "icon": "A single relevant emoji",
-        "gradient": "One of: from-primary to-accent, from-accent to-teal-400, from-purple-500 to-primary, from-orange-400 to-red-500, from-blue-400 to-cyan-400"
-      }
-    ]
-    Do not wrap in Markdown. Output raw JSON array only.`;
+    const ai = new GoogleGenAI({
+      apiKey: process.env.GEMINI_API_KEY!,
+    });
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text().trim().replace(/```json/g, '').replace(/```/g, '').trim();
-    
-    const projects = JSON.parse(text);
+    const responseSchema: Schema = {
+      type: Type.ARRAY,
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          id: { type: Type.STRING },
+          title: { type: Type.STRING },
+          description: { type: Type.STRING },
+          difficulty: { type: Type.STRING, description: 'One of: Beginner, Intermediate, Advanced' },
+          estimatedHours: { type: Type.NUMBER },
+          skills: { type: Type.ARRAY, items: { type: Type.STRING } },
+          icon: { type: Type.STRING, description: 'A single relevant emoji' },
+          gradient: { type: Type.STRING, description: 'Tailwind gradient class' },
+        },
+        required: ['id', 'title', 'description', 'difficulty', 'estimatedHours', 'skills', 'icon', 'gradient'],
+      },
+    };
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: 'Generate exactly 3 diverse software development capstone projects for a student. Include a mix of difficulty levels.',
+      config: {
+        responseMimeType: 'application/json',
+        responseSchema: responseSchema,
+      },
+    });
+
+    if (!response.text) {
+      throw new Error('No text generated.');
+    }
+
+    const projects = JSON.parse(response.text);
     return NextResponse.json({ projects });
-  } catch (error) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Failed to generate projects';
     console.error('Error generating capstone projects:', error);
-    return NextResponse.json({ error: 'Failed to generate projects' }, { status: 500 });
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
