@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Play, Pause, RotateCcw, Timer, Coffee } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useTimerStore } from "@/store/useTimerStore"
+import { trackEvent } from "@/lib/analytics"
 
 export function FocusTimer() {
   // PERFORMANCE: Use selectors to prevent re-rendering when other parts of the store change
@@ -30,6 +31,12 @@ export function FocusTimer() {
 
     return () => clearInterval(interval)
   }, [isRunning, timeLeft, tickTimer])
+
+  useEffect(() => {
+    if (timeLeft === 0 && isRunning) {
+      trackEvent({ name: 'timer_completed', focusDuration: focusTime })
+    }
+  }, [timeLeft, isRunning, focusTime])
 
   return (
     <Card className="border-border/60 bg-card shadow-sm">
@@ -93,7 +100,15 @@ export function FocusTimer() {
           </Button>
           <Button
             size="lg"
-            onClick={() => isRunning ? pauseTimer() : startTimer()}
+            onClick={() => {
+              if (isRunning) {
+                pauseTimer()
+                trackEvent({ name: 'timer_paused', elapsedSeconds: focusTime - timeLeft })
+              } else {
+                startTimer()
+                trackEvent({ name: 'timer_started', focusDuration: focusTime })
+              }
+            }}
             aria-label={isRunning ? 'Pause focus timer' : 'Start focus timer'}
             className={cn(
               "px-8 rounded-xl transition-all duration-200 cursor-pointer shadow-md",

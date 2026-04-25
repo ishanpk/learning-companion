@@ -1,11 +1,14 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { trackEvent } from "@/lib/analytics"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { ArrowLeft, ArrowRight, CheckCircle2, XCircle, Sparkles, Terminal, FileQuestion, Trophy } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useCourseStore } from "@/store/useCourseStore"
+import { createReviewCard } from "@/lib/spaced-repetition"
 
 interface QuizViewProps {
   onBack: () => void
@@ -75,9 +78,14 @@ export function QuizView({ onBack, onComplete, onSwitchToScenario }: QuizViewPro
   const [currentQuestion, setCurrentQuestion] = useState(0)
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null)
   const [showResult, setShowResult] = useState(false)
-  const [answers, setAnswers] = useState<number[]>([])
   const [isComplete, setIsComplete] = useState(false)
   const [quizMode, setQuizMode] = useState<"standard" | "scenario">("standard")
+  const addReviewCard = useCourseStore((s) => s.addReviewCard)
+  const selectedCourseId = useCourseStore((s) => s.selectedCourseId)
+
+  useEffect(() => {
+    trackEvent({ name: 'quiz_started', moduleId: 'module_1' })
+  }, [])
 
   const question = questions[currentQuestion]
   const progress = ((currentQuestion + 1) / questions.length) * 100
@@ -101,6 +109,25 @@ export function QuizView({ onBack, onComplete, onSwitchToScenario }: QuizViewPro
       setShowResult(false)
     } else {
       setIsComplete(true)
+      
+      // Phase 4: Create review cards for spaced repetition
+      questions.forEach((q, idx) => {
+        const cardId = `${selectedCourseId || 'default'}:module_1:q_${idx}`;
+        addReviewCard({
+          ...createReviewCard(cardId),
+          question: q.question,
+          options: q.options,
+          correctAnswer: q.options[q.correct],
+          topic: "Machine Learning" // Should be dynamic from course
+        });
+      });
+
+      trackEvent({ 
+        name: 'quiz_completed', 
+        moduleId: 'module_1', 
+        score: correctAnswers, 
+        total: questions.length 
+      })
     }
   }
 

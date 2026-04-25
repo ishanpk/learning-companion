@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { ArrowLeft, CheckCircle2, Circle, Lock, Zap, TrendingUp, RotateCcw, BookOpen, Route } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useCourseStore } from "@/store/useCourseStore"
+import { trackEvent } from "@/lib/analytics"
 
 interface LearningPathsViewProps {
   onBack: () => void
@@ -50,6 +51,12 @@ export function LearningPathsView({ onBack, onStartLesson }: LearningPathsViewPr
         { id: "8", title: "Practice Project", status: "locked", type: "project", estimatedTime: "1h" },
         { id: "9", title: "Advanced Topics", status: "locked", type: "lesson", estimatedTime: "45m" },
       ]
+
+  useEffect(() => {
+    if (selectedCourseId) {
+      trackEvent({ name: 'learning_path_started', courseId: selectedCourseId })
+    }
+  }, [selectedCourseId])
 
   useEffect(() => {
     if (!selectedCourse) {

@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Progress } from "@/components/ui/progress"
 import { ArrowLeft, ArrowRight, Terminal, AlertTriangle, CheckCircle2, Lightbulb, Code2, Trophy } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { trackEvent } from "@/lib/analytics"
 
 interface ScenarioModeProps {
   onBack: () => void
@@ -105,6 +106,7 @@ export function ScenarioMode({ onBack, onComplete }: ScenarioModeProps) {
       setIsCorrect(false)
     } else {
       setIsComplete(true)
+      trackEvent({ name: 'scenario_completed', scenarioId: String(scenario.id), success: correctCount > 0 })
     }
   }
 

@@ -1,13 +1,18 @@
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { db, auth } from '@/lib/firebase';
 import { Skill, GeneratedCourse } from './types';
 
-// We use a single anonymous user ID stored in localStorage for simplicity
+// Priorities: Firebase Auth UID > localStorage ID
 export function getUserId(): string {
   if (typeof window === 'undefined') return 'ssr-placeholder';
+  
+  // Use Firebase Auth if signed in
+  const currentUser = auth.currentUser;
+  if (currentUser) return currentUser.uid;
+
   let id = localStorage.getItem('sp_userId');
   if (!id) {
-    id = 'user_' + Math.random().toString(36).substring(2, 11);
+    id = 'anon_' + Math.random().toString(36).substring(2, 11);
     localStorage.setItem('sp_userId', id);
   }
   return id;
@@ -17,6 +22,7 @@ export interface PersistedData {
   skills?: Skill[];
   activeLoadout?: string[];
   generatedCourses?: GeneratedCourse[];
+  reviewCards?: ReviewCard[];
 }
 
 /**

@@ -1,61 +1,63 @@
-import { GoogleGenAI, Type, Schema } from '@google/genai';
+import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
 
-// Phase 2: Switch to Edge Runtime for faster TTFB and lower cold starts
-export const runtime = 'edge';
+// Phase 3 Schema: Ensure the AI output perfectly matches our store's expectations
+const courseSchema = z.object({
+  courseTitle: z.string().min(3),
+  modules: z.array(z.object({
+    title: z.string().min(1),
+    description: z.string().min(5),
+    content: z.string().min(20),
+    quiz: z.array(z.object({
+      question: z.string().min(5),
+      options: z.array(z.string()).length(4),
+      correctAnswer: z.string().min(1),
+    })).min(1),
+  })).min(1),
+});
+
 export const dynamic = 'force-dynamic';
 
-/**
- * Simple in-memory rate limiting for the Edge runtime (per region)
- */
 const rateLimitMap = new Map<string, number>();
 
 export async function POST(req: Request) {
   try {
     const { topic } = await req.json();
     
-    // Basic Rate Limiting: 5 requests per minute per IP
+    // Basic Rate Limiting
     const ip = req.headers.get('x-forwarded-for') || 'anon';
     const now = Date.now();
     const lastRequest = rateLimitMap.get(ip) || 0;
-    if (now - lastRequest < 12000) { // 12 seconds between requests
-      return NextResponse.json({ error: "Rate limit exceeded. Please wait a few seconds." }, { status: 429 });
+    if (now - lastRequest < 12000) {
+      return NextResponse.json({ error: "Rate limit exceeded." }, { status: 429 });
     }
     rateLimitMap.set(ip, now);
 
-    if (!topic || topic.length < 2) {
-      return NextResponse.json({ error: "Invalid topic provided." }, { status: 400 });
-    }
+    if (!topic) return NextResponse.json({ error: "No topic provided" }, { status: 400 });
 
-    const ai = new GoogleGenAI({
-      apiKey: process.env.GEMINI_API_KEY!,
-    });
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
-    console.log(`[API] Generating path for topic: ${topic}`);
-
-    const responseSchema: Schema = {
-      type: Type.OBJECT,
+    const responseSchema = {
+      type: SchemaType.OBJECT,
       properties: {
-        courseTitle: {
-          type: Type.STRING,
-          description: "The title of the generated course",
-        },
+        courseTitle: { type: SchemaType.STRING },
         modules: {
-          type: Type.ARRAY,
+          type: SchemaType.ARRAY,
           items: {
-            type: Type.OBJECT,
+            type: SchemaType.OBJECT,
             properties: {
-              title: { type: Type.STRING },
-              description: { type: Type.STRING },
-              content: { type: Type.STRING, description: "Markdown content for the module" },
+              title: { type: SchemaType.STRING },
+              description: { type: SchemaType.STRING },
+              content: { type: SchemaType.STRING },
               quiz: {
-                type: Type.ARRAY,
+                type: SchemaType.ARRAY,
                 items: {
-                  type: Type.OBJECT,
+                  type: SchemaType.OBJECT,
                   properties: {
-                    question: { type: Type.STRING },
-                    options: { type: Type.ARRAY, items: { type: Type.STRING } },
-                    correctAnswer: { type: Type.STRING },
+                    question: { type: SchemaType.STRING },
+                    options: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
+                    correctAnswer: { type: SchemaType.STRING },
                   },
                   required: ["question", "options", "correctAnswer"],
                 },
@@ -66,36 +68,30 @@ export async function POST(req: Request) {
         },
       },
       required: ["courseTitle", "modules"],
-    };
+    } as any;
 
-    const model = ai.getGenerativeModel({
-      model: 'gemini-1.5-flash', // Using latest stable model name
+    const model = genAI.getGenerativeModel({
+      model: 'gemini-1.5-flash',
       generationConfig: {
         responseMimeType: 'application/json',
         responseSchema: responseSchema,
       },
     });
 
-    const result = await model.generateContent(`Create a comprehensive learning path and detailed course modules for the topic: "${topic}".`);
+    const result = await model.generateContent(`Create a learning path for: "${topic}".`);
     const response = await result.response;
     const text = response.text();
 
-    if (!text) {
-      throw new Error("Gemini returned an empty response.");
-    }
-
     const data = JSON.parse(text);
-    return NextResponse.json(data);
+    const validatedData = courseSchema.parse(data);
+
+    return NextResponse.json(validatedData);
 
   } catch (error: any) {
-    console.error("[API] Error generating path:", error);
-    
-    // Phase 2: Structured error handling
-    const status = error.message?.includes("Rate limit") ? 429 : 500;
-    return NextResponse.json({ 
-      error: "AI Generation Failed", 
-      details: error.message,
-      suggestion: "Try a more specific topic or check your internet connection."
-    }, { status });
+    console.error("[API] Error:", error);
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: "Validation Failed", details: error.errors }, { status: 422 });
+    }
+    return NextResponse.json({ error: "AI Failed", details: error.message }, { status: 500 });
   }
 }

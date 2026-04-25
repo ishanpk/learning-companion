@@ -31,12 +31,17 @@ export function StudyView({ onBack, onComplete }: StudyViewProps) {
           <button
             onClick={onBack}
             className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors duration-200 cursor-pointer"
+            aria-label="Return to your learning dashboard"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="w-5 h-5" aria-hidden="true" />
             <span className="text-sm font-semibold">Back to Dashboard</span>
           </button>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground bg-secondary/50 px-3 py-1.5 rounded-full">
-            <BookOpen className="w-4 h-4 text-primary" />
+          <div 
+            className="flex items-center gap-2 text-sm text-muted-foreground bg-secondary/50 px-3 py-1.5 rounded-full"
+            role="status"
+            aria-label={`Learning progress: ${activeModule ? `Module 1 of ${selectedCourse.modules.length}` : "Lesson 5 of 12"}`}
+          >
+            <BookOpen className="w-4 h-4 text-primary" aria-hidden="true" />
             <span className="font-medium">
               {activeModule ? `Module 1 of ${selectedCourse.modules.length}` : "Lesson 5 of 12"}
             </span>

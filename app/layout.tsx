@@ -15,23 +15,24 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Learning Companion | AI-Powered Study Platform',
-  description: 'Your intelligent learning partner. Create personalized study paths, track progress, and master any subject with AI assistance.',
+  title: 'StudyPal | AI-Powered Personalized Learning Companion',
+  description: 'Master any skill with StudyPal. AI-generated learning paths, interactive quizzes, and gamified skill progression designed to maximize your study efficiency.',
+  keywords: ['AI learning', 'personalized study', 'study companion', 'learning platform', 'skill mastery', 'gamified education'],
+  authors: [{ name: 'StudyPal Team' }],
+  openGraph: {
+    title: 'StudyPal — Your AI-Powered Learning Partner',
+    description: 'Create personalized study paths and track your micro-skill progression with AI.',
+    type: 'website',
+    url: 'https://studypal-companion-app.web.app',
+    siteName: 'StudyPal',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'StudyPal — AI Learning Companion',
+    description: 'Master subjects faster with AI-generated curricula and interactive scenarios.',
+  },
   icons: {
-    icon: [
-      {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
-      },
-    ],
+    icon: '/icon.svg',
     apple: '/apple-icon.png',
   },
 }

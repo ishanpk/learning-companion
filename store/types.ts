@@ -30,3 +30,16 @@ export interface GeneratedCourse {
   modules: GeneratedModule[];
   createdAt: number;
 }
+
+export interface ReviewCard {
+  id: string; // Unique ID (e.g. `courseId:moduleIndex:quizIndex`)
+  lastReviewed: number;
+  nextReview: number;
+  streak: number;
+  intervalIndex: number;
+  // Metadata for display
+  question: string;
+  options: string[];
+  correctAnswer: string;
+  topic: string;
+}

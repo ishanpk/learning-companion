@@ -6,6 +6,9 @@ import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { X, ChevronRight, CheckCircle2, XCircle, Brain, Sparkles, Sun } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useCourseStore } from "@/store/useCourseStore"
+import { getDueCards, getNextReviewLabel } from "@/lib/spaced-repetition"
+import { ReviewCard } from "@/store/types"
 
 interface DailyWarmupProps {
   isOpen: boolean
@@ -56,6 +59,10 @@ const flashcards = [
 ]
 
 export function DailyWarmup({ isOpen, onClose, onComplete }: DailyWarmupProps) {
+  const reviewCards = useCourseStore((s) => s.reviewCards)
+  const updateReviewCard = useCourseStore((s) => s.updateReviewCard)
+  
+  const dueCards = getDueCards(reviewCards)
   const [currentCard, setCurrentCard] = useState(0)
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null)
   const [showResult, setShowResult] = useState(false)
@@ -64,8 +71,10 @@ export function DailyWarmup({ isOpen, onClose, onComplete }: DailyWarmupProps) {
 
   if (!isOpen) return null
 
-  const card = flashcards[currentCard]
-  const progress = ((currentCard + 1) / flashcards.length) * 100
+  // Fallback to static cards if none are due
+  const activeCards = dueCards.length > 0 ? dueCards : flashcards
+  const card = activeCards[currentCard]
+  const progress = ((currentCard + 1) / activeCards.length) * 100
   const isCorrect = selectedAnswer === card.correct
 
   const handleSelect = (index: number) => {
@@ -76,11 +85,17 @@ export function DailyWarmup({ isOpen, onClose, onComplete }: DailyWarmupProps) {
   const handleSubmit = () => {
     if (selectedAnswer === null) return
     setShowResult(true)
-    setResults([...results, selectedAnswer === card.correct])
+    const correct = selectedAnswer === card.correct
+    setResults([...results, correct])
+    
+    // Update the card in the store if it's a real review card
+    if ('intervalIndex' in card) {
+      updateReviewCard(card.id, correct)
+    }
   }
 
   const handleNext = () => {
-    if (currentCard < flashcards.length - 1) {
+    if (currentCard < activeCards.length - 1) {
       setCurrentCard(currentCard + 1)
       setSelectedAnswer(null)
       setShowResult(false)
@@ -161,7 +176,7 @@ export function DailyWarmup({ isOpen, onClose, onComplete }: DailyWarmupProps) {
             <div className="mb-6">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-sm font-semibold text-foreground">
-                  Card {currentCard + 1} of {flashcards.length}
+                  Card {currentCard + 1} of {activeCards.length}
                 </span>
                 <span className="text-xs text-muted-foreground flex items-center gap-1.5 bg-secondary/50 px-2.5 py-1 rounded-full">
                   <Sparkles className="w-3 h-3 text-primary" />
@@ -185,7 +200,11 @@ export function DailyWarmup({ isOpen, onClose, onComplete }: DailyWarmupProps) {
 
               {/* Main card */}
               <div className="relative bg-secondary/30 border border-border/60 rounded-2xl p-6">
-                <p className="text-xs text-muted-foreground mb-3">Last reviewed: {card.lastReviewed}</p>
+                <p className="text-xs text-muted-foreground mb-3">
+                  {'lastReviewed' in card && card.lastReviewed > 0 
+                    ? `Next: ${getNextReviewLabel(card as ReviewCard)}` 
+                    : `Topic: ${card.topic}`}
+                </p>
                 <h3 className="text-lg font-bold text-foreground mb-5 leading-relaxed">
                   {card.concept}
                 </h3>
@@ -260,7 +279,7 @@ export function DailyWarmup({ isOpen, onClose, onComplete }: DailyWarmupProps) {
                     onClick={handleNext}
                     className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl cursor-pointer shadow-md shadow-primary/15"
                   >
-                    {currentCard < flashcards.length - 1 ? (
+                    {currentCard < activeCards.length - 1 ? (
                       <>
                         Next Card
                         <ChevronRight className="w-4 h-4 ml-1" />

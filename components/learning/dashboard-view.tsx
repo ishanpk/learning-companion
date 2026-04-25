@@ -9,6 +9,8 @@ import { Sparkles, Search, TrendingUp, Target, Clock, Zap, Sun, Heart, BookOpen,
 import { useCourseStore } from "@/store/useCourseStore"
 import type { GeneratedCourse } from "@/store/types"
 import { Badge } from "@/components/ui/badge"
+import { auth } from "@/lib/firebase"
+import { GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth"
 
 interface DashboardViewProps {
   onStartStudy: () => void
@@ -57,6 +59,17 @@ const stats = [
 export function DashboardView({ onStartStudy }: DashboardViewProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [isGenerating, setIsGenerating] = useState(false)
+  const user = auth.currentUser;
+
+  const handleSignIn = async () => {
+    const provider = new GoogleAuthProvider();
+    try {
+      await signInWithPopup(auth, provider);
+      window.location.reload(); // Refresh to sync stores with new UID
+    } catch (err) {
+      console.error("Sign in failed:", err);
+    }
+  };
 
   // Connect to Zustand store (backed by Firebase)
   const generatedCourses = useCourseStore((s) => s.generatedCourses)
@@ -111,11 +124,38 @@ export function DashboardView({ onStartStudy }: DashboardViewProps) {
               <span className="text-sm font-medium text-muted-foreground">Good morning</span>
             </div>
             <h1 className="text-3xl font-bold text-foreground">
-              Welcome back!
+              Welcome back! <span className="sr-only">to your StudyPal Dashboard</span>
             </h1>
             <p className="text-muted-foreground mt-1 text-lg">
               Ready to continue learning? You&apos;re doing great.
             </p>
+          </div>
+
+          <div className="flex items-center gap-4">
+            {user && !user.isAnonymous ? (
+              <div className="flex items-center gap-3 bg-secondary/50 p-2 pl-4 rounded-2xl border border-border/60">
+                <div className="text-right hidden sm:block">
+                  <p className="text-xs font-bold text-foreground">{user.displayName}</p>
+                  <p className="text-[10px] text-muted-foreground">{user.email}</p>
+                </div>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => signOut(auth).then(() => window.location.reload())}
+                  className="text-xs hover:text-destructive cursor-pointer"
+                >
+                  Sign Out
+                </Button>
+              </div>
+            ) : (
+              <Button 
+                variant="outline" 
+                onClick={handleSignIn}
+                className="rounded-xl border-primary/30 hover:bg-primary/5 text-primary cursor-pointer font-semibold"
+              >
+                Sign In
+              </Button>
+            )}
           </div>
         </div>
 
@@ -178,8 +218,9 @@ export function DashboardView({ onStartStudy }: DashboardViewProps) {
                   size="sm"
                   className="text-muted-foreground hover:text-destructive cursor-pointer"
                   onClick={clearCourses}
+                  aria-label="Clear all generated learning paths"
                 >
-                  <Trash2 className="w-4 h-4 mr-1" />
+                  <Trash2 className="w-4 h-4 mr-1" aria-hidden="true" />
                   Clear all
                 </Button>
               </div>
@@ -193,6 +234,10 @@ export function DashboardView({ onStartStudy }: DashboardViewProps) {
                     selectCourse(course.id)
                     onStartStudy()
                   }}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Start course: ${course.courseTitle}`}
+                  onKeyDown={(e) => { if (e.key === "Enter") { selectCourse(course.id); onStartStudy(); } }}
                 >
                   <CardContent className="p-6">
                     <div className="flex items-start gap-5">

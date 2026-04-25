@@ -1,29 +1,20 @@
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { NextResponse } from 'next/server';
 
-export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
     const { solution, scenarioId } = await req.json();
 
-    if (!solution) {
-      return NextResponse.json({ error: "No solution provided" }, { status: 400 });
-    }
+    if (!solution) return NextResponse.json({ error: "No solution provided" }, { status: 400 });
 
-    const ai = new GoogleGenAI({
-      apiKey: process.env.GEMINI_API_KEY!,
-    });
-
-    const model = ai.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
     const prompt = `
-      You are an expert code reviewer. A student has submitted a fix for a coding scenario.
-      Scenario ID: ${scenarioId}
-      User's Solution: "${solution}"
-      
-      Evaluate the solution. Is it correct? Provide a brief explanation and a score (0-100).
+      Evaluate the solution for Scenario ${scenarioId}.
+      Solution: "${solution}"
       Return as JSON: { "isCorrect": boolean, "explanation": string, "score": number }
     `;
 
@@ -33,7 +24,6 @@ export async function POST(req: Request) {
 
     return NextResponse.json(data);
   } catch (error: any) {
-    console.error("[API] Scenario Check Error:", error);
-    return NextResponse.json({ error: "Evaluation failed", details: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Failed", details: error.message }, { status: 500 });
   }
 }

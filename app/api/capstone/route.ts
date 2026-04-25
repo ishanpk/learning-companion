@@ -1,50 +1,44 @@
-import { GoogleGenAI, Type, Schema } from '@google/genai';
+import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
 import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const ai = new GoogleGenAI({
-      apiKey: process.env.GEMINI_API_KEY!,
-    });
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
-    const responseSchema: Schema = {
-      type: Type.ARRAY,
+    const responseSchema = {
+      type: SchemaType.ARRAY,
       items: {
-        type: Type.OBJECT,
+        type: SchemaType.OBJECT,
         properties: {
-          id: { type: Type.STRING },
-          title: { type: Type.STRING },
-          description: { type: Type.STRING },
-          difficulty: { type: Type.STRING, description: 'One of: Beginner, Intermediate, Advanced' },
-          estimatedHours: { type: Type.NUMBER },
-          skills: { type: Type.ARRAY, items: { type: Type.STRING } },
-          icon: { type: Type.STRING, description: 'A single relevant emoji' },
-          gradient: { type: Type.STRING, description: 'Tailwind gradient class' },
+          id: { type: SchemaType.STRING },
+          title: { type: SchemaType.STRING },
+          description: { type: SchemaType.STRING },
+          difficulty: { type: SchemaType.STRING },
+          estimatedHours: { type: SchemaType.NUMBER },
+          skills: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
+          icon: { type: SchemaType.STRING },
+          gradient: { type: SchemaType.STRING },
         },
         required: ['id', 'title', 'description', 'difficulty', 'estimatedHours', 'skills', 'icon', 'gradient'],
       },
-    };
+    } as any;
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: 'Generate exactly 3 diverse software development capstone projects for a student. Include a mix of difficulty levels.',
-      config: {
+    const model = genAI.getGenerativeModel({
+      model: 'gemini-1.5-flash',
+      generationConfig: {
         responseMimeType: 'application/json',
         responseSchema: responseSchema,
       },
     });
 
-    if (!response.text) {
-      throw new Error('No text generated.');
-    }
+    const result = await model.generateContent('Generate exactly 3 diverse software development capstone projects.');
+    const response = await result.response;
+    const projects = JSON.parse(response.text());
 
-    const projects = JSON.parse(response.text);
     return NextResponse.json({ projects });
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Failed to generate projects';
-    console.error('Error generating capstone projects:', error);
-    return NextResponse.json({ error: message }, { status: 500 });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
