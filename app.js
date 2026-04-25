@@ -41,11 +41,13 @@ const state = {
     currentCard: 0,
     timer: { interval: null, remaining: 25 * 60, total: 25 * 60, running: false, mode: 'focus', sessions: 0 },
     quiz: { questions: [], current: 0, score: 0, active: false },
-    ai: { lastResults: [], apiKey: 'AIzaSyCwmEBt-Aij0NwTuqqCp5gzz9R3O8VvjnQ' }
+    ai: { lastResults: [] }
 };
 
 /**
  * Saves current state to Firebase Firestore
+ * Fallback to localStorage if offline.
+ * @async
  */
 async function save() {
     try {
@@ -126,6 +128,10 @@ document.getElementById('get-started-btn').addEventListener('click', () => {
 });
 
 // ---- Flashcards ----
+
+/**
+ * Updates the flashcard display UI based on the current state.
+ */
 function updateCardDisplay() {
     const filter = document.getElementById('flashcard-filter').value;
     const cards = filter === 'all' ? state.flashcards : state.flashcards.filter(c => c.category === filter);
@@ -417,24 +423,42 @@ document.getElementById('save-note-btn').addEventListener('click', () => {
     save(); renderNotes(); updateStats();
 });
 
-document.getElementById('notes-search').addEventListener('input', (e) => renderNotes(e.target.value.toLowerCase()));
+/**
+ * Debounce utility function for efficiency
+ * @param {Function} func - The function to debounce
+ * @param {number} wait - Wait time in milliseconds
+ */
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => { clearTimeout(timeout); func(...args); };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
 
-// ---- AI Assistant (Google Gemini) ----
+// Efficient debounced search
+const handleSearch = debounce((e) => renderNotes(e.target.value.toLowerCase()), 300);
+document.getElementById('notes-search').addEventListener('input', handleSearch);
+
+// ---- AI Assistant (Secure Backend Call) ----
+/**
+ * Calls the secure backend endpoint to generate content with Gemini
+ * @param {string} prompt - The user prompt
+ * @returns {Promise<string>} - AI response text
+ */
 async function callGemini(prompt) {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${state.ai.apiKey}`;
     try {
-        const response = await fetch(url, {
+        const response = await fetch('/api/gemini', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{ parts: [{ text: prompt }] }]
-            })
+            body: JSON.stringify({ prompt })
         });
         const data = await response.json();
-        if (data.error) throw new Error(data.error.message);
-        return data.candidates[0].content.parts[0].text;
+        if (data.error) throw new Error(data.error);
+        return data.result;
     } catch (error) {
-        console.error('Gemini API Error:', error);
+        console.error('AI Request Error:', error);
         showToast('AI Error: ' + error.message, 'error');
         throw error;
     }
@@ -607,21 +631,6 @@ document.getElementById('clear-data-btn').addEventListener('click', async () => 
         showToast('Failed to clear cloud data', 'error');
     }
 });
-
-// ---- Utilities ----
-function escapeHtml(str) {
-    const d = document.createElement('div'); d.textContent = str; return d.innerHTML;
-}
-
-function timeAgo(dateStr) {
-    const diff = Date.now() - new Date(dateStr).getTime();
-    const mins = Math.floor(diff / 60000);
-    if (mins < 1) return 'just now';
-    if (mins < 60) return `${mins}m ago`;
-    const hrs = Math.floor(mins / 60);
-    if (hrs < 24) return `${hrs}h ago`;
-    return `${Math.floor(hrs / 24)}d ago`;
-}
 
 // ---- Init ----
 initCloudSync();

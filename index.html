@@ -29,23 +29,23 @@
             <span class="brand-text">StudyPal</span>
         </div>
         <div class="nav-links">
-            <button id="nav-flashcards" class="nav-btn active" data-section="flashcards">
-                <span class="nav-icon">🃏</span> Flashcards
+            <button id="nav-flashcards" class="nav-btn active" data-section="flashcards" aria-label="Navigate to Flashcards" role="tab">
+                <span class="nav-icon" aria-hidden="true">🃏</span> Flashcards
             </button>
-            <button id="nav-quiz" class="nav-btn" data-section="quiz">
-                <span class="nav-icon">🧠</span> Quiz
+            <button id="nav-quiz" class="nav-btn" data-section="quiz" aria-label="Navigate to Quiz" role="tab">
+                <span class="nav-icon" aria-hidden="true">🧠</span> Quiz
             </button>
-            <button id="nav-ai" class="nav-btn" data-section="ai">
-                <span class="nav-icon">✨</span> AI Assistant
+            <button id="nav-ai" class="nav-btn" data-section="ai" aria-label="Navigate to AI Assistant" role="tab">
+                <span class="nav-icon" aria-hidden="true">✨</span> AI Assistant
             </button>
-            <button id="nav-timer" class="nav-btn" data-section="timer">
-                <span class="nav-icon">⏱️</span> Timer
+            <button id="nav-timer" class="nav-btn" data-section="timer" aria-label="Navigate to Timer" role="tab">
+                <span class="nav-icon" aria-hidden="true">⏱️</span> Timer
             </button>
-            <button id="nav-notes" class="nav-btn" data-section="notes">
-                <span class="nav-icon">📝</span> Notes
+            <button id="nav-notes" class="nav-btn" data-section="notes" aria-label="Navigate to Notes" role="tab">
+                <span class="nav-icon" aria-hidden="true">📝</span> Notes
             </button>
-            <button id="nav-progress" class="nav-btn" data-section="progress">
-                <span class="nav-icon">📊</span> Progress
+            <button id="nav-progress" class="nav-btn" data-section="progress" aria-label="Navigate to Progress" role="tab">
+                <span class="nav-icon" aria-hidden="true">📊</span> Progress
             </button>
         </div>
     </nav>
@@ -133,9 +133,9 @@
                     </div>
                 </div>
                 <div class="flashcard-controls">
-                    <button id="prev-card-btn" class="icon-btn" title="Previous card">◀</button>
-                    <button id="flip-card-btn" class="secondary-btn">Flip Card</button>
-                    <button id="next-card-btn" class="icon-btn" title="Next card">▶</button>
+                    <button id="prev-card-btn" class="icon-btn" aria-label="Previous card" title="Previous card">◀</button>
+                    <button id="flip-card-btn" class="secondary-btn" aria-label="Flip card">Flip Card</button>
+                    <button id="next-card-btn" class="icon-btn" aria-label="Next card" title="Next card">▶</button>
                 </div>
                 <div class="flashcard-rating">
                     <span>How well did you know this?</span>
@@ -388,6 +388,8 @@
     <!-- Toast Notifications -->
     <div class="toast-container" id="toast-container"></div>
 
+    <!-- Scripts -->
+    <script src="utils.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
