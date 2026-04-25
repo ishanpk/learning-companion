@@ -5,7 +5,9 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { CourseCard } from "./course-card"
-import { Sparkles, Search, TrendingUp, Target, Clock, Zap, Sun, Heart } from "lucide-react"
+import { Sparkles, Search, TrendingUp, Target, Clock, Zap, Sun, Heart, BookOpen, Loader2, Trash2 } from "lucide-react"
+import { useStudyStore, type GeneratedCourse } from "@/store/useStudyStore"
+import { Badge } from "@/components/ui/badge"
 
 interface DashboardViewProps {
   onStartStudy: () => void
@@ -53,6 +55,45 @@ const stats = [
 
 export function DashboardView({ onStartStudy }: DashboardViewProps) {
   const [searchQuery, setSearchQuery] = useState("")
+  const [isGenerating, setIsGenerating] = useState(false)
+
+  // Connect to Zustand store (backed by Firebase)
+  const generatedCourses = useStudyStore((s) => s.generatedCourses)
+  const addGeneratedCourse = useStudyStore((s) => s.addGeneratedCourse)
+  const clearCourses = useStudyStore((s) => s.clearCourses)
+
+  /**
+   * Calls the Gemini backend API to generate a learning path,
+   * then saves the result to Firebase via the Zustand store.
+   */
+  const handleCreatePath = async () => {
+    if (!searchQuery.trim()) return
+    setIsGenerating(true)
+
+    try {
+      const res = await fetch("/api/generate-path", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ topic: searchQuery.trim() }),
+      })
+
+      if (!res.ok) throw new Error("Failed to generate path")
+
+      const data = await res.json()
+
+      // Save to Zustand + Firebase
+      addGeneratedCourse({
+        courseTitle: data.courseTitle,
+        modules: data.modules,
+      })
+
+      setSearchQuery("")
+    } catch (err) {
+      console.error("Error creating path:", err)
+    } finally {
+      setIsGenerating(false)
+    }
+  }
 
   return (
     <div className="flex-1 overflow-auto">
@@ -83,15 +124,28 @@ export function DashboardView({ onStartStudy }: DashboardViewProps) {
                   placeholder="What would you like to learn today?"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") handleCreatePath() }}
                   className="pl-12 pr-4 py-6 text-base bg-secondary/50 border-border/60 focus:border-primary focus:ring-primary/20 placeholder:text-muted-foreground rounded-xl"
+                  disabled={isGenerating}
                 />
               </div>
               <Button 
                 size="lg"
                 className="px-6 bg-primary hover:bg-primary/90 text-primary-foreground shadow-md shadow-primary/15 transition-all duration-200 rounded-xl cursor-pointer whitespace-nowrap"
+                onClick={handleCreatePath}
+                disabled={isGenerating || !searchQuery.trim()}
               >
-                <Sparkles className="w-5 h-5 mr-2" />
-                Create Path
+                {isGenerating ? (
+                  <>
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-5 h-5 mr-2" />
+                    Create Path
+                  </>
+                )}
               </Button>
             </div>
             <p className="text-sm text-muted-foreground mt-4 flex items-center gap-2">
@@ -100,6 +154,88 @@ export function DashboardView({ onStartStudy }: DashboardViewProps) {
             </p>
           </CardContent>
         </Card>
+
+        {/* AI-Generated Learning Paths (from Firebase) */}
+        {generatedCourses.length > 0 && (
+          <div>
+            <CardHeader className="px-0 pt-0 pb-4">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-xl font-bold text-foreground flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-primary" />
+                  AI-Generated Paths
+                  <Badge variant="secondary" className="text-xs bg-primary/10 text-primary border-0 rounded-full ml-1">
+                    {generatedCourses.length}
+                  </Badge>
+                </CardTitle>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-muted-foreground hover:text-destructive cursor-pointer"
+                  onClick={clearCourses}
+                >
+                  <Trash2 className="w-4 h-4 mr-1" />
+                  Clear all
+                </Button>
+              </div>
+            </CardHeader>
+            <div className="grid gap-4">
+              {generatedCourses.map((course: GeneratedCourse) => (
+                <Card
+                  key={course.id}
+                  className="group border-border/60 bg-card hover:border-primary/40 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 cursor-pointer"
+                  onClick={onStartStudy}
+                >
+                  <CardContent className="p-6">
+                    <div className="flex items-start gap-5">
+                      {/* Icon */}
+                      <div className="w-[76px] h-[76px] rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center shrink-0">
+                        <BookOpen className="w-8 h-8 text-primary" />
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Badge variant="secondary" className="text-xs font-semibold bg-primary/10 text-primary border-0 rounded-full px-3">
+                            AI Generated
+                          </Badge>
+                          <Badge variant="secondary" className="text-xs font-semibold bg-accent/10 text-accent border-0 rounded-full px-3">
+                            {course.modules.length} modules
+                          </Badge>
+                        </div>
+
+                        <h3 className="font-bold text-lg text-foreground truncate mb-1.5">
+                          {course.courseTitle}
+                        </h3>
+                        <p className="text-sm text-muted-foreground line-clamp-2 mb-4 leading-relaxed">
+                          {course.modules[0]?.description || "A personalized learning path generated by AI."}
+                        </p>
+
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                            <div className="flex items-center gap-1.5">
+                              <BookOpen className="w-4 h-4" />
+                              <span>{course.modules.length} lessons</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <Clock className="w-4 h-4" />
+                              <span>{new Date(course.createdAt).toLocaleDateString()}</span>
+                            </div>
+                          </div>
+                          <Button
+                            size="sm"
+                            className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm hover:shadow-md shadow-primary/10 transition-all duration-200 rounded-xl cursor-pointer px-5"
+                            onClick={(e) => { e.stopPropagation(); onStartStudy() }}
+                          >
+                            Start Learning
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Stats Grid */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
