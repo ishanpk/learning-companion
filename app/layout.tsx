@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import { Nunito, JetBrains_Mono } from 'next/font/google'
-import { Analytics } from '@vercel/analytics/next'
 import { FirebaseProvider } from '@/components/firebase-provider'
 import './globals.css'
 
@@ -49,7 +48,6 @@ export default function RootLayout({
         <FirebaseProvider>
           {children}
         </FirebaseProvider>
-        {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>
   )
