@@ -1,5 +1,4 @@
-"use client"
-
+import { memo } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -17,7 +16,7 @@ interface CourseCardProps {
   onResume: () => void
 }
 
-export function CourseCard({
+export const CourseCard = memo(({
   title,
   description,
   progress,
@@ -26,7 +25,7 @@ export function CourseCard({
   estimatedTime,
   category,
   onResume,
-}: CourseCardProps) {
+}: CourseCardProps) => {
   return (
     <Card className="group relative overflow-hidden border-border/60 bg-card hover:border-primary/40 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5">
       <CardContent className="relative p-6">
@@ -81,4 +80,6 @@ export function CourseCard({
       </CardContent>
     </Card>
   )
-}
+})
+
+CourseCard.displayName = "CourseCard"

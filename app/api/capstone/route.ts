@@ -1,12 +1,24 @@
-import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
+import { getAIModel, SchemaType } from '@/lib/ai';
+
+const projectSchema = z.object({
+  projects: z.array(z.object({
+    id: z.string(),
+    title: z.string(),
+    description: z.string(),
+    difficulty: z.string(),
+    estimatedHours: z.number(),
+    skills: z.array(z.string()),
+    icon: z.string(),
+    gradient: z.string(),
+  })).length(3),
+});
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-
     const responseSchema = {
       type: SchemaType.ARRAY,
       items: {
@@ -23,22 +35,17 @@ export async function GET() {
         },
         required: ['id', 'title', 'description', 'difficulty', 'estimatedHours', 'skills', 'icon', 'gradient'],
       },
-    } as any;
+    };
 
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-flash',
-      generationConfig: {
-        responseMimeType: 'application/json',
-        responseSchema: responseSchema,
-      },
-    });
-
+    const model = getAIModel(responseSchema);
     const result = await model.generateContent('Generate exactly 3 diverse software development capstone projects.');
-    const response = await result.response;
-    const projects = JSON.parse(response.text());
+    const text = result.response.text();
 
-    return NextResponse.json({ projects });
+    const data = projectSchema.parse({ projects: JSON.parse(text) });
+    return NextResponse.json(data);
+
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("[API] Capstone Error:", error);
+    return NextResponse.json({ error: "Failed to generate projects", details: error.message }, { status: 500 });
   }
 }

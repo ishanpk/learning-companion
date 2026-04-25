@@ -11,12 +11,12 @@ import type { GeneratedCourse } from "@/store/types"
 import { Badge } from "@/components/ui/badge"
 import { auth } from "@/lib/firebase"
 import { GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth"
+import { useCreatePath } from "@/lib/hooks/use-create-path"
 
-interface DashboardViewProps {
-  onStartStudy: () => void
-}
-
-const courses = [
+/**
+ * Static mock data moved outside the component to prevent unnecessary re-initialization.
+ */
+const MOCK_COURSES = [
   {
     id: 1,
     title: "Introduction to Machine Learning",
@@ -49,69 +49,48 @@ const courses = [
   },
 ]
 
-const stats = [
+const STATS_CONFIG = [
   { label: "Study Hours", value: "47.5", icon: Clock, change: "+12%", color: "text-primary" },
   { label: "Completed", value: "23", icon: Target, change: "+3", color: "text-accent" },
   { label: "Current Streak", value: "7", icon: Zap, change: "Best: 14", color: "text-amber-500" },
   { label: "This Week", value: "8.2h", icon: TrendingUp, change: "+23%", color: "text-primary" },
 ]
 
+interface DashboardViewProps {
+  onStartStudy: () => void
+}
+
+/**
+ * The primary landing view for the Learning Companion.
+ * Provides entry points for generating AI paths, tracking progress, and viewing stats.
+ */
 export function DashboardView({ onStartStudy }: DashboardViewProps) {
   const [searchQuery, setSearchQuery] = useState("")
-  const [isGenerating, setIsGenerating] = useState(false)
+  const { isGenerating, createPath } = useCreatePath()
+  
+  // Zustand State
+  const generatedCourses = useCourseStore((s) => s.generatedCourses)
+  const clearCourses = useCourseStore((s) => s.clearCourses)
+  const selectCourse = useCourseStore((s) => s.selectCourse)
+  
   const user = auth.currentUser;
 
   const handleSignIn = async () => {
     const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
-      window.location.reload(); // Refresh to sync stores with new UID
+      window.location.reload(); 
     } catch (err) {
-      console.error("Sign in failed:", err);
+      console.error("[Dashboard] Sign in failed:", err);
     }
   };
 
-  // Connect to Zustand store (backed by Firebase)
-  const generatedCourses = useCourseStore((s) => s.generatedCourses)
-  const addGeneratedCourse = useCourseStore((s) => s.addGeneratedCourse)
-  const clearCourses = useCourseStore((s) => s.clearCourses)
-  const selectCourse = useCourseStore((s) => s.selectCourse)
-
-  /**
-   * Calls the Gemini backend API to generate a learning path,
-   * then saves the result to Firebase via the Zustand store.
-   */
-  const handleCreatePath = async () => {
-    if (!searchQuery.trim()) return
-    setIsGenerating(true)
-
-    try {
-      const res = await fetch("/api/generate-path", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ topic: searchQuery.trim() }),
-      })
-
-      if (!res.ok) throw new Error("Failed to generate path")
-
-      const data = await res.json()
-
-      // Save to Zustand + Firebase (this also sets selectedCourseId)
-      addGeneratedCourse({
-        courseTitle: data.courseTitle,
-        modules: data.modules,
-      })
-
-      // Navigate to the study view
-      onStartStudy()
-
-      setSearchQuery("")
-    } catch (err) {
-      console.error("Error creating path:", err)
-    } finally {
-      setIsGenerating(false)
-    }
-  }
+  const handleGenerate = () => {
+    createPath(searchQuery, () => {
+      onStartStudy();
+      setSearchQuery("");
+    });
+  };
 
   return (
     <div className="flex-1 overflow-auto">
@@ -169,7 +148,7 @@ export function DashboardView({ onStartStudy }: DashboardViewProps) {
                   placeholder="What would you like to learn today?"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === "Enter") handleCreatePath() }}
+                  onKeyDown={(e) => { if (e.key === "Enter") handleGenerate() }}
                   className="pl-12 pr-4 py-6 text-base bg-secondary/50 border-border/60 focus:border-primary focus:ring-primary/20 placeholder:text-muted-foreground rounded-xl"
                   disabled={isGenerating}
                   aria-label="Search for a learning topic"
@@ -178,7 +157,7 @@ export function DashboardView({ onStartStudy }: DashboardViewProps) {
               <Button 
                 size="lg"
                 className="px-6 bg-primary hover:bg-primary/90 text-primary-foreground shadow-md shadow-primary/15 transition-all duration-200 rounded-xl cursor-pointer whitespace-nowrap"
-                onClick={handleCreatePath}
+                onClick={handleGenerate}
                 disabled={isGenerating || !searchQuery.trim()}
               >
                 {isGenerating ? (
@@ -293,7 +272,7 @@ export function DashboardView({ onStartStudy }: DashboardViewProps) {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {stats.map((stat) => {
+          {STATS_CONFIG.map((stat) => {
             const Icon = stat.icon
             return (
               <Card key={stat.label} className="border-border/60 bg-card shadow-sm hover:shadow-md transition-shadow duration-200">
@@ -326,7 +305,7 @@ export function DashboardView({ onStartStudy }: DashboardViewProps) {
             </div>
           </CardHeader>
           <div className="grid gap-4">
-            {courses.map((course) => (
+            {MOCK_COURSES.map((course) => (
               <CourseCard
                 key={course.id}
                 {...course}

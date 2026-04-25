@@ -1,8 +1,15 @@
-import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import { getAIModel, SchemaType } from '@/lib/ai';
 
-// Phase 3 Schema: Ensure the AI output perfectly matches our store's expectations
+/**
+ * Global rate limit store (In-memory for prototype).
+ */
+const rateLimitMap = new Map<string, number>();
+
+/**
+ * Output Validation Schema.
+ */
 const courseSchema = z.object({
   courseTitle: z.string().min(3),
   modules: z.array(z.object({
@@ -19,25 +26,21 @@ const courseSchema = z.object({
 
 export const dynamic = 'force-dynamic';
 
-const rateLimitMap = new Map<string, number>();
-
 export async function POST(req: Request) {
   try {
     const { topic } = await req.json();
     
-    // Basic Rate Limiting
+    // 1. Rate Limiting Logic
     const ip = req.headers.get('x-forwarded-for') || 'anon';
     const now = Date.now();
-    const lastRequest = rateLimitMap.get(ip) || 0;
-    if (now - lastRequest < 12000) {
-      return NextResponse.json({ error: "Rate limit exceeded." }, { status: 429 });
+    if (now - (rateLimitMap.get(ip) || 0) < 12000) {
+      return NextResponse.json({ error: "Rate limit exceeded. Please wait." }, { status: 429 });
     }
     rateLimitMap.set(ip, now);
 
     if (!topic) return NextResponse.json({ error: "No topic provided" }, { status: 400 });
 
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-
+    // 2. Define Response Schema for SDK
     const responseSchema = {
       type: SchemaType.OBJECT,
       properties: {
@@ -68,30 +71,23 @@ export async function POST(req: Request) {
         },
       },
       required: ["courseTitle", "modules"],
-    } as any;
+    };
 
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-flash',
-      generationConfig: {
-        responseMimeType: 'application/json',
-        responseSchema: responseSchema,
-      },
-    });
+    // 3. Generate Content using shared helper
+    const model = getAIModel(responseSchema);
+    const result = await model.generateContent(`Create a structured learning path for: "${topic}".`);
+    const text = result.response.text();
 
-    const result = await model.generateContent(`Create a learning path for: "${topic}".`);
-    const response = await result.response;
-    const text = response.text();
-
-    const data = JSON.parse(text);
-    const validatedData = courseSchema.parse(data);
-
-    return NextResponse.json(validatedData);
+    // 4. Validate and Return
+    const data = courseSchema.parse(JSON.parse(text));
+    return NextResponse.json(data);
 
   } catch (error: any) {
-    console.error("[API] Error:", error);
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: "Validation Failed", details: error.errors }, { status: 422 });
-    }
-    return NextResponse.json({ error: "AI Failed", details: error.message }, { status: 500 });
+    console.error("[API] Generation Error:", error);
+    const status = error instanceof z.ZodError ? 422 : 500;
+    return NextResponse.json({ 
+      error: "AI Generation Failed", 
+      details: error.message 
+    }, { status });
   }
 }

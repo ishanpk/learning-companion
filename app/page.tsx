@@ -1,16 +1,45 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { AppSidebar } from "@/components/learning/app-sidebar"
 import { MobileNav } from "@/components/learning/mobile-nav"
+import dynamic from "next/dynamic"
 import { DashboardView } from "@/components/learning/dashboard-view"
-import { StudyView } from "@/components/learning/study-view"
-import { QuizView } from "@/components/learning/quiz-view"
-import { DailyWarmup } from "@/components/learning/daily-warmup"
-import { ScenarioMode } from "@/components/learning/scenario-mode"
-import { LearningPathsView } from "@/components/learning/learning-paths-view"
-import { SkillLoadout } from "@/components/learning/skill-loadout"
-import { CapstoneView } from "@/components/learning/capstone-view"
+
+// Performance: Lazy load heavy components to reduce initial bundle size
+const StudyView = dynamic(() => import("@/components/learning/study-view").then(m => m.StudyView), {
+  loading: () => <ViewSkeleton />
+})
+const QuizView = dynamic(() => import("@/components/learning/quiz-view").then(m => m.QuizView), {
+  loading: () => <ViewSkeleton />
+})
+const DailyWarmup = dynamic(() => import("@/components/learning/daily-warmup").then(m => m.DailyWarmup))
+const ScenarioMode = dynamic(() => import("@/components/learning/scenario-mode").then(m => m.ScenarioMode), {
+  loading: () => <ViewSkeleton />
+})
+const LearningPathsView = dynamic(() => import("@/components/learning/learning-paths-view").then(m => m.LearningPathsView), {
+  loading: () => <ViewSkeleton />
+})
+const SkillLoadout = dynamic(() => import("@/components/learning/skill-loadout").then(m => m.SkillLoadout), {
+  loading: () => <ViewSkeleton />
+})
+const CapstoneView = dynamic(() => import("@/components/learning/capstone-view").then(m => m.CapstoneView), {
+  loading: () => <ViewSkeleton />
+})
+
+/**
+ * Loading skeleton for smooth view transitions
+ */
+function ViewSkeleton() {
+  return (
+    <div className="flex-1 flex items-center justify-center bg-background">
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+        <p className="text-sm text-muted-foreground animate-pulse">Loading study session...</p>
+      </div>
+    </div>
+  )
+}
 
 type ViewType = "dashboard" | "study" | "quiz" | "scenario" | "paths" | "skills" | "analytics" | "settings" | "capstone"
 
@@ -152,7 +181,9 @@ export default function LearningCompanion() {
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-h-screen">
-        {renderView()}
+        <Suspense fallback={<ViewSkeleton />}>
+          {renderView()}
+        </Suspense>
       </main>
 
       {/* Mobile Navigation */}
