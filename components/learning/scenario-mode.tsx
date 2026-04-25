@@ -241,6 +241,7 @@ export function ScenarioMode({ onBack, onComplete }: ScenarioModeProps) {
                   onChange={(e) => setUserSolution(e.target.value)}
                   placeholder="Type your solution here... Explain what's wrong and how to fix it."
                   disabled={submitted}
+                  aria-label="Your Solution"
                   className={cn(
                     "min-h-[200px] pt-10 bg-secondary/30 border-border/60 font-mono text-sm resize-none rounded-xl",
                     submitted && isCorrect && "border-primary",

@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft, CheckCircle2, Circle, Lock, Zap, TrendingUp, RotateCcw, BookOpen, Route } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useCourseStore } from "@/store/useCourseStore"
 
 interface LearningPathsViewProps {
   onBack: () => void
@@ -19,37 +20,47 @@ interface PathNode {
   estimatedTime: string
 }
 
-const pathNodes: PathNode[] = [
-  { id: "1", title: "Introduction to ML", status: "completed", type: "lesson", estimatedTime: "15m" },
-  { id: "2", title: "Data Preprocessing", status: "completed", type: "lesson", estimatedTime: "25m" },
-  { id: "3", title: "Quiz: Basics", status: "completed", type: "quiz", estimatedTime: "10m" },
-  { id: "4", title: "Neural Networks", status: "current", type: "lesson", estimatedTime: "30m" },
-  { id: "5", title: "Activation Functions", status: "fast-track", type: "lesson", estimatedTime: "20m" },
-  { id: "6", title: "Backpropagation", status: "upcoming", type: "lesson", estimatedTime: "35m" },
-  { id: "7", title: "Quiz: Networks", status: "upcoming", type: "quiz", estimatedTime: "15m" },
-  { id: "8", title: "Practice Project", status: "locked", type: "project", estimatedTime: "1h" },
-  { id: "9", title: "Advanced Topics", status: "locked", type: "lesson", estimatedTime: "45m" },
-]
-
-const reviewNodes: PathNode[] = [
-  { id: "r1", title: "Review: Data Types", status: "review", type: "lesson", estimatedTime: "10m" },
-  { id: "r2", title: "Review: Functions", status: "review", type: "quiz", estimatedTime: "8m" },
-]
-
 export function LearningPathsView({ onBack, onStartLesson }: LearningPathsViewProps) {
+  const selectedCourseId = useCourseStore((s) => s.selectedCourseId)
+  const generatedCourses = useCourseStore((s) => s.generatedCourses)
+
+  const selectedCourse = generatedCourses.find(c => c.id === selectedCourseId)
+
   const [showToast, setShowToast] = useState(false)
   const [toastMessage, setToastMessage] = useState("")
   const [toastType, setToastType] = useState<"fast-track" | "review">("fast-track")
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setToastType("fast-track")
-      setToastMessage("You're doing great! Skipping ahead to Activation Functions.")
-      setShowToast(true)
-    }, 1500)
+  // Map generated modules to path nodes
+  const pathNodes: PathNode[] = selectedCourse 
+    ? selectedCourse.modules.map((m, idx) => ({
+        id: `node-${idx}`,
+        title: m.title,
+        status: idx === 0 ? "current" : "upcoming",
+        type: "lesson",
+        estimatedTime: "15m"
+      }))
+    : [
+        { id: "1", title: "Introduction to ML", status: "completed", type: "lesson", estimatedTime: "15m" },
+        { id: "2", title: "Data Preprocessing", status: "completed", type: "lesson", estimatedTime: "25m" },
+        { id: "3", title: "Quiz: Basics", status: "completed", type: "quiz", estimatedTime: "10m" },
+        { id: "4", title: "Neural Networks", status: "current", type: "lesson", estimatedTime: "30m" },
+        { id: "5", title: "Activation Functions", status: "fast-track", type: "lesson", estimatedTime: "20m" },
+        { id: "6", title: "Backpropagation", status: "upcoming", type: "lesson", estimatedTime: "35m" },
+        { id: "7", title: "Quiz: Networks", status: "upcoming", type: "quiz", estimatedTime: "15m" },
+        { id: "8", title: "Practice Project", status: "locked", type: "project", estimatedTime: "1h" },
+        { id: "9", title: "Advanced Topics", status: "locked", type: "lesson", estimatedTime: "45m" },
+      ]
 
-    return () => clearTimeout(timer)
-  }, [])
+  useEffect(() => {
+    if (!selectedCourse) {
+      const timer = setTimeout(() => {
+        setToastType("fast-track")
+        setToastMessage("You're doing great! Skipping ahead to Activation Functions.")
+        setShowToast(true)
+      }, 1500)
+      return () => clearTimeout(timer)
+    }
+  }, [selectedCourse])
 
   useEffect(() => {
     if (showToast) {
@@ -148,61 +159,31 @@ export function LearningPathsView({ onBack, onStartLesson }: LearningPathsViewPr
             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
               <Route className="w-5 h-5 text-primary" />
             </div>
-            Introduction to Machine Learning
+            {selectedCourse ? selectedCourse.courseTitle : "Introduction to Machine Learning"}
           </h1>
-          <p className="text-muted-foreground">Your personalized learning path adapts based on your performance</p>
+          <p className="text-muted-foreground">
+            {selectedCourse ? "Your AI-generated learning path is ready" : "Your personalized learning path adapts based on your performance"}
+          </p>
         </div>
 
         {/* Legend */}
-        <div className="flex flex-wrap gap-4 mb-8 text-sm p-4 bg-secondary/30 rounded-xl">
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-primary" />
-            <span className="text-muted-foreground">Completed</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded-full bg-primary" />
-            <span className="text-muted-foreground">Current</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Zap className="w-4 h-4 text-amber-500" />
-            <span className="text-muted-foreground">Fast-track</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <RotateCcw className="w-4 h-4 text-accent" />
-            <span className="text-muted-foreground">Review</span>
-          </div>
-        </div>
-
-        {/* Review Detour (if any) */}
-        {reviewNodes.length > 0 && (
-          <div className="mb-8">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">
-                <RotateCcw className="w-5 h-5 text-accent" />
-              </div>
-              <div>
-                <h3 className="font-bold text-foreground">Suggested Review</h3>
-                <p className="text-sm text-muted-foreground">Based on your quiz performance</p>
-              </div>
+        {!selectedCourse && (
+          <div className="flex flex-wrap gap-4 mb-8 text-sm p-4 bg-secondary/30 rounded-xl">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-primary" />
+              <span className="text-muted-foreground">Completed</span>
             </div>
-            <div className="flex gap-3 overflow-x-auto pb-2">
-              {reviewNodes.map((node) => (
-                <Card
-                  key={node.id}
-                  className={cn(
-                    "shrink-0 border-2 cursor-pointer hover:scale-[1.02] transition-all duration-200",
-                    getNodeStyles(node)
-                  )}
-                >
-                  <CardContent className="p-4 flex items-center gap-3">
-                    {getNodeIcon(node)}
-                    <div>
-                      <p className="font-semibold text-foreground text-sm">{node.title}</p>
-                      <p className="text-xs text-muted-foreground">{node.estimatedTime}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded-full bg-primary" />
+              <span className="text-muted-foreground">Current</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Zap className="w-4 h-4 text-amber-500" />
+              <span className="text-muted-foreground">Fast-track</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <RotateCcw className="w-4 h-4 text-accent" />
+              <span className="text-muted-foreground">Review</span>
             </div>
           </div>
         )}

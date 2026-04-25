@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { CourseCard } from "./course-card"
 import { Sparkles, Search, TrendingUp, Target, Clock, Zap, Sun, Heart, BookOpen, Loader2, Trash2 } from "lucide-react"
-import { useStudyStore, type GeneratedCourse } from "@/store/useStudyStore"
+import { useCourseStore } from "@/store/useCourseStore"
+import type { GeneratedCourse } from "@/store/types"
 import { Badge } from "@/components/ui/badge"
 
 interface DashboardViewProps {
@@ -58,9 +59,10 @@ export function DashboardView({ onStartStudy }: DashboardViewProps) {
   const [isGenerating, setIsGenerating] = useState(false)
 
   // Connect to Zustand store (backed by Firebase)
-  const generatedCourses = useStudyStore((s) => s.generatedCourses)
-  const addGeneratedCourse = useStudyStore((s) => s.addGeneratedCourse)
-  const clearCourses = useStudyStore((s) => s.clearCourses)
+  const generatedCourses = useCourseStore((s) => s.generatedCourses)
+  const addGeneratedCourse = useCourseStore((s) => s.addGeneratedCourse)
+  const clearCourses = useCourseStore((s) => s.clearCourses)
+  const selectCourse = useCourseStore((s) => s.selectCourse)
 
   /**
    * Calls the Gemini backend API to generate a learning path,
@@ -81,11 +83,14 @@ export function DashboardView({ onStartStudy }: DashboardViewProps) {
 
       const data = await res.json()
 
-      // Save to Zustand + Firebase
+      // Save to Zustand + Firebase (this also sets selectedCourseId)
       addGeneratedCourse({
         courseTitle: data.courseTitle,
         modules: data.modules,
       })
+
+      // Navigate to the study view
+      onStartStudy()
 
       setSearchQuery("")
     } catch (err) {
@@ -127,6 +132,7 @@ export function DashboardView({ onStartStudy }: DashboardViewProps) {
                   onKeyDown={(e) => { if (e.key === "Enter") handleCreatePath() }}
                   className="pl-12 pr-4 py-6 text-base bg-secondary/50 border-border/60 focus:border-primary focus:ring-primary/20 placeholder:text-muted-foreground rounded-xl"
                   disabled={isGenerating}
+                  aria-label="Search for a learning topic"
                 />
               </div>
               <Button 
@@ -183,7 +189,10 @@ export function DashboardView({ onStartStudy }: DashboardViewProps) {
                 <Card
                   key={course.id}
                   className="group border-border/60 bg-card hover:border-primary/40 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 cursor-pointer"
-                  onClick={onStartStudy}
+                  onClick={() => {
+                    selectCourse(course.id)
+                    onStartStudy()
+                  }}
                 >
                   <CardContent className="p-6">
                     <div className="flex items-start gap-5">

@@ -10,6 +10,7 @@ export async function POST(req: Request) {
     });
 
     const { topic } = await req.json();
+    console.log(`[API] Generating path for topic: ${topic}`);
 
     const responseSchema: Schema = {
       type: Type.OBJECT,
@@ -62,7 +63,7 @@ export async function POST(req: Request) {
     const data = JSON.parse(response.text);
     return NextResponse.json(data);
   } catch (error: any) {
-    console.error("Error generating path:", error);
+    console.error("[API] Error generating path:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
