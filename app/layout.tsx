@@ -25,7 +25,7 @@ export const metadata: Metadata = {
   description: 'Master any skill with StudyPal. AI-generated learning paths, interactive quizzes, and gamified skill progression designed to maximize your study efficiency.',
   keywords: ['AI learning', 'personalized study', 'study companion', 'learning platform', 'skill mastery', 'gamified education'],
   authors: [{ name: 'StudyPal Team' }],
-  metadataBase: new URL('https://studypal-companion-app.web.app'),
+  metadataBase: new URL('https://prompt-wars-demo-281097.web.app'),
   alternates: {
     canonical: '/',
   },
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     title: 'StudyPal — Your AI-Powered Learning Partner',
     description: 'Create personalized study paths and track your micro-skill progression with AI.',
     type: 'website',
-    url: 'https://studypal-companion-app.web.app',
+    url: 'https://prompt-wars-demo-281097.web.app',
     siteName: 'StudyPal',
     images: [{
       url: '/og-image.png',

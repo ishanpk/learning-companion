@@ -1,5 +1,6 @@
 # <div align="center">🎓 StudyPal</div>
 ## <div align="center">**AI-Powered Personalized Learning Companion**</div>
+### <div align="center">[Live Demo: prompt-wars-demo-281097.web.app](https://prompt-wars-demo-281097.web.app)</div>
 
 <div align="center">
 
