@@ -9,5 +9,14 @@
     "frameworksBackend": {
       "region": "us-central1"
     }
+  },
+  "auth": {
+    "includeStackTraces": true,
+    "blockingFunctions": {},
+    "providers": {
+      "anonymous": {
+        "enabled": true
+      }
+    }
   }
 }
