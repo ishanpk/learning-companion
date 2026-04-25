@@ -1,17 +1,15 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Trophy, Sparkles, Clock, Star, Rocket, Code2, Layers, ArrowRight, Confetti, Crown, CheckCircle2 } from "lucide-react"
+import { Trophy, Sparkles, Clock, Star, Rocket, Code2, Layers, ArrowRight, Crown, CheckCircle2, ArrowLeft, PartyPopper } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface CapstoneViewProps {
   onBack: () => void
   onAcceptProject: (projectId: string) => void
 }
-
-// Removed hardcoded array, fetching from backend
 
 export function CapstoneView({ onBack, onAcceptProject }: CapstoneViewProps) {
   const [showCelebration, setShowCelebration] = useState(true)
@@ -21,19 +19,16 @@ export function CapstoneView({ onBack, onAcceptProject }: CapstoneViewProps) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Generate confetti pieces
     const pieces = Array.from({ length: 50 }, (_, i) => ({
       id: i,
       left: Math.random() * 100,
       delay: Math.random() * 2,
-      color: ['bg-primary', 'bg-accent', 'bg-yellow-400', 'bg-pink-400', 'bg-teal-400'][Math.floor(Math.random() * 5)],
+      color: ['bg-primary', 'bg-accent', 'bg-amber-400', 'bg-rose-300', 'bg-teal-400'][Math.floor(Math.random() * 5)],
     }))
     setConfettiPieces(pieces)
 
-    // Hide celebration after animation
     const timer = setTimeout(() => setShowCelebration(false), 4000)
 
-    // Fetch projects from backend
     const fetchProjects = async () => {
       try {
         const res = await fetch('/api/capstone')
@@ -53,18 +48,18 @@ export function CapstoneView({ onBack, onAcceptProject }: CapstoneViewProps) {
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
-      case "Beginner": return "bg-accent/20 text-accent"
-      case "Intermediate": return "bg-primary/20 text-primary"
-      case "Advanced": return "bg-orange-500/20 text-orange-400"
+      case "Beginner": return "bg-primary/10 text-primary"
+      case "Intermediate": return "bg-accent/10 text-accent"
+      case "Advanced": return "bg-amber-100 text-amber-700"
       default: return "bg-secondary text-muted-foreground"
     }
   }
 
   return (
-    <div className="flex-1 overflow-auto relative">
+    <div className="flex-1 overflow-auto relative bg-background">
       {/* Celebration Overlay */}
       {showCelebration && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/90 backdrop-blur-md overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-sm overflow-hidden">
           {/* Confetti */}
           {confettiPieces.map((piece) => (
             <div
@@ -80,39 +75,37 @@ export function CapstoneView({ onBack, onAcceptProject }: CapstoneViewProps) {
 
           <div className="text-center z-10 animate-in zoom-in-50 duration-700">
             <div className="relative inline-block mb-6">
-              <div className="w-32 h-32 rounded-full bg-gradient-to-br from-yellow-400 via-orange-500 to-primary flex items-center justify-center animate-pulse">
-                <Trophy className="w-16 h-16 text-white" />
+              <div className="w-32 h-32 rounded-3xl bg-gradient-to-br from-amber-200 via-primary/30 to-accent/30 flex items-center justify-center shadow-xl">
+                <Trophy className="w-16 h-16 text-amber-600" />
               </div>
-              <Sparkles className="absolute -top-2 -right-2 w-8 h-8 text-yellow-400 animate-bounce" />
-              <Sparkles className="absolute -bottom-2 -left-2 w-6 h-6 text-accent animate-bounce delay-100" />
-              <Crown className="absolute -top-4 left-1/2 -translate-x-1/2 w-10 h-10 text-yellow-400" />
+              <PartyPopper className="absolute -top-2 -right-2 w-8 h-8 text-accent animate-bounce" />
+              <Sparkles className="absolute -bottom-2 -left-2 w-6 h-6 text-primary animate-bounce delay-100" />
+              <Crown className="absolute -top-4 left-1/2 -translate-x-1/2 w-10 h-10 text-amber-500" />
             </div>
             <h1 className="text-4xl font-bold text-foreground mb-2">
               Course Completed!
             </h1>
             <p className="text-xl text-muted-foreground mb-6">
-              {"You've mastered Introduction to Machine Learning"}
+              You&apos;ve mastered Introduction to Machine Learning
             </p>
-            <div className="flex items-center justify-center gap-4 mb-8">
-              <div className="flex items-center gap-2 text-yellow-400">
+            <div className="flex items-center justify-center gap-4 mb-8 flex-wrap">
+              <div className="flex items-center gap-2 text-amber-600 bg-amber-50 px-3 py-1.5 rounded-full">
                 <Star className="w-5 h-5 fill-current" />
-                <span className="font-semibold">+500 XP</span>
+                <span className="font-bold">+500 XP</span>
               </div>
-              <div className="w-1 h-1 rounded-full bg-muted-foreground" />
-              <div className="flex items-center gap-2 text-accent">
+              <div className="flex items-center gap-2 text-primary bg-primary/10 px-3 py-1.5 rounded-full">
                 <CheckCircle2 className="w-5 h-5" />
-                <span className="font-semibold">12 Lessons</span>
+                <span className="font-bold">12 Lessons</span>
               </div>
-              <div className="w-1 h-1 rounded-full bg-muted-foreground" />
-              <div className="flex items-center gap-2 text-primary">
+              <div className="flex items-center gap-2 text-accent bg-accent/10 px-3 py-1.5 rounded-full">
                 <Trophy className="w-5 h-5" />
-                <span className="font-semibold">New Badge</span>
+                <span className="font-bold">New Badge</span>
               </div>
             </div>
             <Button
               size="lg"
               onClick={() => setShowCelebration(false)}
-              className="bg-gradient-to-r from-primary to-accent hover:opacity-90 text-primary-foreground px-8"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 rounded-xl cursor-pointer shadow-md shadow-primary/15"
             >
               <Rocket className="w-5 h-5 mr-2" />
               View Capstone Projects
@@ -134,48 +127,57 @@ export function CapstoneView({ onBack, onAcceptProject }: CapstoneViewProps) {
         }
       `}</style>
 
-      <div className="max-w-6xl mx-auto p-6 lg:p-8 pb-24 lg:pb-8">
+      <div className="max-w-6xl mx-auto p-6 lg:p-8 pb-28 lg:pb-8">
+        {/* Back Button */}
+        <button
+          onClick={onBack}
+          className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors duration-200 cursor-pointer mb-8"
+        >
+          <ArrowLeft className="w-5 h-5" />
+          <span className="text-sm font-semibold">Back to Dashboard</span>
+        </button>
+
         {/* Header */}
         <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 border border-accent/30 text-accent text-sm font-medium mb-4">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-semibold mb-4">
             <Trophy className="w-4 h-4" />
             Course Complete
           </div>
           <h1 className="text-3xl font-bold text-foreground mb-3">
             Choose Your Capstone Project
           </h1>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-muted-foreground max-w-2xl mx-auto leading-relaxed">
             Apply everything you have learned in a comprehensive project. These challenges are designed to test your mastery and build your portfolio.
           </p>
         </div>
 
         {/* Stats Summary */}
         <div className="grid grid-cols-3 gap-4 mb-12">
-          <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-            <CardContent className="p-4 text-center">
+          <Card className="border-border/60 bg-card shadow-sm">
+            <CardContent className="p-5 text-center">
               <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-primary/10 flex items-center justify-center">
                 <Code2 className="w-6 h-6 text-primary" />
               </div>
               <p className="text-2xl font-bold text-foreground">12</p>
-              <p className="text-xs text-muted-foreground">Lessons Completed</p>
+              <p className="text-sm text-muted-foreground">Lessons Completed</p>
             </CardContent>
           </Card>
-          <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-            <CardContent className="p-4 text-center">
+          <Card className="border-border/60 bg-card shadow-sm">
+            <CardContent className="p-5 text-center">
               <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-accent/10 flex items-center justify-center">
                 <Layers className="w-6 h-6 text-accent" />
               </div>
               <p className="text-2xl font-bold text-foreground">8</p>
-              <p className="text-xs text-muted-foreground">Skills Unlocked</p>
+              <p className="text-sm text-muted-foreground">Skills Unlocked</p>
             </CardContent>
           </Card>
-          <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-            <CardContent className="p-4 text-center">
-              <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-yellow-400/10 flex items-center justify-center">
-                <Star className="w-6 h-6 text-yellow-400" />
+          <Card className="border-border/60 bg-card shadow-sm">
+            <CardContent className="p-5 text-center">
+              <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-amber-100 flex items-center justify-center">
+                <Star className="w-6 h-6 text-amber-600" />
               </div>
               <p className="text-2xl font-bold text-foreground">95%</p>
-              <p className="text-xs text-muted-foreground">Quiz Average</p>
+              <p className="text-sm text-muted-foreground">Quiz Average</p>
             </CardContent>
           </Card>
         </div>
@@ -184,7 +186,7 @@ export function CapstoneView({ onBack, onAcceptProject }: CapstoneViewProps) {
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 animate-in fade-in duration-500">
              <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
-             <p className="text-muted-foreground animate-pulse">Generating your personalized capstone challenges with AI...</p>
+             <p className="text-muted-foreground">Generating your personalized capstone challenges...</p>
           </div>
         ) : (
           <div className="grid lg:grid-cols-3 gap-6">
@@ -192,25 +194,24 @@ export function CapstoneView({ onBack, onAcceptProject }: CapstoneViewProps) {
             <Card
               key={project.id}
               className={cn(
-                "border-2 transition-all cursor-pointer overflow-hidden group",
+                "border-2 transition-all duration-200 cursor-pointer overflow-hidden group hover:shadow-lg",
                 selectedProject === project.id
-                  ? "border-primary ring-2 ring-primary/30"
-                  : "border-border/50 hover:border-primary/30"
+                  ? "border-primary ring-2 ring-primary/20"
+                  : "border-border/60 hover:border-primary/40"
               )}
               onClick={() => setSelectedProject(project.id)}
             >
               {/* Gradient Header */}
               <div className={cn(
                 "h-24 bg-gradient-to-br relative overflow-hidden",
-                project.gradient
+                project.gradient || "from-primary/20 to-accent/20"
               )}>
-                <div className="absolute inset-0 bg-black/20" />
-                <div className="absolute inset-0 flex items-center justify-center text-5xl opacity-50 group-hover:scale-110 transition-transform">
+                <div className="absolute inset-0 flex items-center justify-center text-5xl opacity-70 group-hover:scale-110 transition-transform duration-300">
                   {project.icon}
                 </div>
                 <div className="absolute top-3 right-3">
                   <span className={cn(
-                    "px-3 py-1 rounded-full text-xs font-semibold",
+                    "px-3 py-1 rounded-full text-xs font-bold",
                     getDifficultyColor(project.difficulty)
                   )}>
                     {project.difficulty}
@@ -219,10 +220,10 @@ export function CapstoneView({ onBack, onAcceptProject }: CapstoneViewProps) {
               </div>
 
               <CardContent className="p-6">
-                <h3 className="text-lg font-bold text-foreground mb-2 group-hover:text-primary transition-colors">
+                <h3 className="text-lg font-bold text-foreground mb-2 group-hover:text-primary transition-colors duration-200">
                   {project.title}
                 </h3>
-                <p className="text-sm text-muted-foreground mb-4 line-clamp-3">
+                <p className="text-sm text-muted-foreground mb-4 line-clamp-3 leading-relaxed">
                   {project.description}
                 </p>
 
@@ -236,10 +237,10 @@ export function CapstoneView({ onBack, onAcceptProject }: CapstoneViewProps) {
 
                 {/* Skills */}
                 <div className="flex flex-wrap gap-2 mb-6">
-                  {project.skills.map((skill) => (
+                  {project.skills.map((skill: string) => (
                     <span
                       key={skill}
-                      className="px-2 py-1 rounded-md bg-secondary/50 text-xs text-muted-foreground"
+                      className="px-2.5 py-1 rounded-full bg-secondary/50 text-xs text-muted-foreground font-medium"
                     >
                       {skill}
                     </span>
@@ -248,9 +249,9 @@ export function CapstoneView({ onBack, onAcceptProject }: CapstoneViewProps) {
 
                 <Button
                   className={cn(
-                    "w-full transition-all",
+                    "w-full transition-all duration-200 rounded-xl cursor-pointer",
                     selectedProject === project.id
-                      ? "bg-gradient-to-r from-primary to-accent hover:opacity-90 text-primary-foreground"
+                      ? "bg-primary hover:bg-primary/90 text-primary-foreground shadow-md shadow-primary/15"
                       : "bg-secondary text-foreground hover:bg-secondary/80"
                   )}
                   onClick={(e) => {
@@ -275,13 +276,6 @@ export function CapstoneView({ onBack, onAcceptProject }: CapstoneViewProps) {
           ))}
         </div>
         )}
-
-        {/* Back Button */}
-        <div className="mt-8 text-center">
-          <Button variant="outline" onClick={onBack} className="border-border/50">
-            Back to Dashboard
-          </Button>
-        </div>
       </div>
     </div>
   )

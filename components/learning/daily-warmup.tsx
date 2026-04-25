@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
-import { X, ChevronRight, ChevronLeft, CheckCircle2, XCircle, Brain, Sparkles, Flame } from "lucide-react"
+import { X, ChevronRight, CheckCircle2, XCircle, Brain, Sparkles, Sun } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface DailyWarmupProps {
@@ -93,7 +93,6 @@ export function DailyWarmup({ isOpen, onClose, onComplete }: DailyWarmupProps) {
     setIsExiting(true)
     setTimeout(() => {
       onComplete()
-      // Reset state for next time
       setCurrentCard(0)
       setSelectedAnswer(null)
       setShowResult(false)
@@ -121,7 +120,7 @@ export function DailyWarmup({ isOpen, onClose, onComplete }: DailyWarmupProps) {
     >
       {/* Backdrop */}
       <div 
-        className="absolute inset-0 bg-background/80 backdrop-blur-md"
+        className="absolute inset-0 bg-background/90 backdrop-blur-sm"
         onClick={handleSkip}
       />
 
@@ -132,25 +131,25 @@ export function DailyWarmup({ isOpen, onClose, onComplete }: DailyWarmupProps) {
           isExiting ? "scale-95 opacity-0" : "scale-100 opacity-100"
         )}
       >
-        <Card className="border-border/50 bg-card/95 backdrop-blur-xl shadow-2xl overflow-hidden">
+        <Card className="border-border/60 bg-card shadow-xl overflow-hidden">
           {/* Header */}
-          <div className="bg-gradient-to-r from-primary/20 via-accent/10 to-primary/20 px-6 py-4 border-b border-border/50">
+          <div className="bg-gradient-to-r from-primary/10 via-secondary to-accent/10 px-6 py-5 border-b border-border/60">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                  <Brain className="w-5 h-5 text-primary-foreground" />
+                <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
+                  <Brain className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <h2 className="font-semibold text-foreground flex items-center gap-2">
+                  <h2 className="font-bold text-lg text-foreground flex items-center gap-2">
                     Daily Warm-Up
-                    <Flame className="w-4 h-4 text-orange-400" />
+                    <Sun className="w-5 h-5 text-accent" />
                   </h2>
-                  <p className="text-xs text-muted-foreground">Spaced repetition review</p>
+                  <p className="text-sm text-muted-foreground">Quick review to refresh your memory</p>
                 </div>
               </div>
               <button 
                 onClick={handleSkip}
-                className="p-2 rounded-lg hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground"
+                className="p-2.5 rounded-xl hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -160,38 +159,38 @@ export function DailyWarmup({ isOpen, onClose, onComplete }: DailyWarmupProps) {
           <CardContent className="p-6">
             {/* Progress */}
             <div className="mb-6">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-foreground">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm font-semibold text-foreground">
                   Card {currentCard + 1} of {flashcards.length}
                 </span>
-                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                <span className="text-xs text-muted-foreground flex items-center gap-1.5 bg-secondary/50 px-2.5 py-1 rounded-full">
                   <Sparkles className="w-3 h-3 text-primary" />
                   {card.topic}
                 </span>
               </div>
-              <Progress value={progress} className="h-1.5" />
+              <Progress value={progress} className="h-2 rounded-full" />
             </div>
 
-            {/* Flashcard Stack Visual */}
+            {/* Flashcard */}
             <div className="relative mb-6">
-              {/* Background cards */}
+              {/* Background cards for stack effect */}
               {currentCard < flashcards.length - 1 && (
                 <>
-                  <div className="absolute inset-0 transform translate-y-2 translate-x-2 bg-card border border-border/30 rounded-xl opacity-50" />
+                  <div className="absolute inset-0 transform translate-y-2 translate-x-2 bg-secondary/30 border border-border/40 rounded-2xl" />
                   {currentCard < flashcards.length - 2 && (
-                    <div className="absolute inset-0 transform translate-y-4 translate-x-4 bg-card border border-border/20 rounded-xl opacity-30" />
+                    <div className="absolute inset-0 transform translate-y-4 translate-x-4 bg-secondary/20 border border-border/30 rounded-2xl" />
                   )}
                 </>
               )}
 
               {/* Main card */}
-              <div className="relative bg-secondary/30 border border-border/50 rounded-xl p-6">
-                <p className="text-xs text-muted-foreground mb-2">Last reviewed: {card.lastReviewed}</p>
-                <h3 className="text-lg font-semibold text-foreground mb-4">
+              <div className="relative bg-secondary/30 border border-border/60 rounded-2xl p-6">
+                <p className="text-xs text-muted-foreground mb-3">Last reviewed: {card.lastReviewed}</p>
+                <h3 className="text-lg font-bold text-foreground mb-5 leading-relaxed">
                   {card.concept}
                 </h3>
 
-                <div className="space-y-2">
+                <div className="space-y-2.5">
                   {card.options.map((option, index) => {
                     const isSelected = selectedAnswer === index
                     const isCorrectAnswer = index === card.correct
@@ -202,20 +201,20 @@ export function DailyWarmup({ isOpen, onClose, onComplete }: DailyWarmupProps) {
                         onClick={() => handleSelect(index)}
                         disabled={showResult}
                         className={cn(
-                          "w-full text-left px-4 py-3 rounded-lg border transition-all duration-200",
+                          "w-full text-left px-4 py-3.5 rounded-xl border-2 transition-all duration-200 cursor-pointer",
                           "flex items-center gap-3 text-sm",
-                          !showResult && !isSelected && "border-border/50 hover:border-primary/30 hover:bg-primary/5",
+                          !showResult && !isSelected && "border-border/60 hover:border-primary/40 hover:bg-primary/5",
                           !showResult && isSelected && "border-primary bg-primary/10",
-                          showResult && isCorrectAnswer && "border-accent bg-accent/10",
+                          showResult && isCorrectAnswer && "border-primary bg-primary/10",
                           showResult && isSelected && !isCorrectAnswer && "border-destructive bg-destructive/10"
                         )}
                       >
                         <div
                           className={cn(
-                            "w-6 h-6 rounded-full border flex items-center justify-center shrink-0 text-xs font-medium",
+                            "w-7 h-7 rounded-full border-2 flex items-center justify-center shrink-0 text-xs font-bold",
                             !showResult && !isSelected && "border-border text-muted-foreground",
                             !showResult && isSelected && "border-primary bg-primary text-primary-foreground",
-                            showResult && isCorrectAnswer && "border-accent bg-accent text-accent-foreground",
+                            showResult && isCorrectAnswer && "border-primary bg-primary text-primary-foreground",
                             showResult && isSelected && !isCorrectAnswer && "border-destructive bg-destructive text-destructive-foreground"
                           )}
                         >
@@ -228,8 +227,8 @@ export function DailyWarmup({ isOpen, onClose, onComplete }: DailyWarmupProps) {
                           )}
                         </div>
                         <span className={cn(
-                          "text-foreground/90",
-                          showResult && isCorrectAnswer && "text-accent font-medium"
+                          "text-foreground/90 font-medium",
+                          showResult && isCorrectAnswer && "text-primary"
                         )}>
                           {option}
                         </span>
@@ -244,7 +243,7 @@ export function DailyWarmup({ isOpen, onClose, onComplete }: DailyWarmupProps) {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-sm">
                 <span className="text-muted-foreground">Score:</span>
-                <span className="font-semibold text-accent">{correctCount}/{results.length + (showResult ? 1 : 0)}</span>
+                <span className="font-bold text-primary">{correctCount}/{results.length + (showResult ? 1 : 0)}</span>
               </div>
 
               <div className="flex gap-2">
@@ -252,14 +251,14 @@ export function DailyWarmup({ isOpen, onClose, onComplete }: DailyWarmupProps) {
                   <Button
                     onClick={handleSubmit}
                     disabled={selectedAnswer === null}
-                    className="bg-gradient-to-r from-primary to-accent hover:opacity-90 text-primary-foreground"
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl cursor-pointer shadow-md shadow-primary/15"
                   >
                     Check Answer
                   </Button>
                 ) : (
                   <Button
                     onClick={handleNext}
-                    className="bg-gradient-to-r from-primary to-accent hover:opacity-90 text-primary-foreground"
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl cursor-pointer shadow-md shadow-primary/15"
                   >
                     {currentCard < flashcards.length - 1 ? (
                       <>
