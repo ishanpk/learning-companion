@@ -9,7 +9,8 @@ const state = {
     stats: JSON.parse(localStorage.getItem('sp_stats') || '{"cardsStudied":0,"quizzesTaken":0,"studyMinutes":0,"quizScores":[],"streak":0,"lastStudyDate":null,"mastered":0,"activities":[]}'),
     currentCard: 0,
     timer: { interval: null, remaining: 25 * 60, total: 25 * 60, running: false, mode: 'focus', sessions: 0 },
-    quiz: { questions: [], current: 0, score: 0, active: false }
+    quiz: { questions: [], current: 0, score: 0, active: false },
+    ai: { lastResults: [], apiKey: 'AIzaSyCwmEBt-Aij0NwTuqqCp5gzz9R3O8VvjnQ' }
 };
 
 function save() {
@@ -330,6 +331,132 @@ document.getElementById('save-note-btn').addEventListener('click', () => {
 });
 
 document.getElementById('notes-search').addEventListener('input', (e) => renderNotes(e.target.value.toLowerCase()));
+
+// ---- AI Assistant (Google Gemini) ----
+/**
+ * Calls Google Gemini API to generate flashcards or answer questions
+ * @param {string} prompt - The user prompt
+ * @returns {Promise<string>} - AI response text
+ */
+async function callGemini(prompt) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${state.ai.apiKey}`;
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: prompt }] }]
+            })
+        });
+        const data = await response.json();
+        if (data.error) throw new Error(data.error.message);
+        return data.candidates[0].content.parts[0].text;
+    } catch (error) {
+        console.error('Gemini API Error:', error);
+        showToast('AI Error: ' + error.message, 'error');
+        throw error;
+    }
+}
+
+document.getElementById('ai-generate-btn').addEventListener('click', async () => {
+    const text = document.getElementById('ai-input-text').value.trim();
+    const count = document.getElementById('ai-card-count').value;
+    const category = document.getElementById('ai-category-input').value.trim() || 'AI Generated';
+    
+    if (!text) return showToast('Please enter some text for the AI to analyze', 'error');
+    
+    const btn = document.getElementById('ai-generate-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<span>⏳ Generating...</span>';
+    
+    const prompt = `Act as a professional educator. Based on the following study text, generate exactly ${count} flashcards in JSON format. 
+    Each card should have a "front" (question/concept) and "back" (explanation/answer). 
+    Return ONLY the JSON array. Text: ${text}`;
+
+    try {
+        const response = await callGemini(prompt);
+        // Clean up response if it contains markdown code blocks
+        const jsonStr = response.replace(/```json/g, '').replace(/```/g, '').trim();
+        const cards = JSON.parse(jsonStr);
+        
+        state.ai.lastResults = cards.map(c => ({ ...c, category }));
+        renderAiResults();
+        showToast(`Generated ${cards.length} flashcards!`, 'success');
+    } catch (error) {
+        showToast('Failed to generate cards. Try again.', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span>✨ Generate Flashcards</span>';
+    }
+});
+
+function renderAiResults() {
+    const container = document.getElementById('ai-cards-preview');
+    const resultsArea = document.getElementById('ai-results');
+    
+    if (state.ai.lastResults.length === 0) {
+        resultsArea.style.display = 'none';
+        return;
+    }
+    
+    resultsArea.style.display = 'block';
+    container.innerHTML = state.ai.lastResults.map((card, index) => `
+        <div class="ai-preview-card">
+            <div class="ai-preview-front">${escapeHtml(card.front)}</div>
+            <div class="ai-preview-back">${escapeHtml(card.back)}</div>
+        </div>
+    `).join('');
+}
+
+document.getElementById('ai-import-all-btn').addEventListener('click', () => {
+    state.flashcards.push(...state.ai.lastResults);
+    addActivity(`Imported ${state.ai.lastResults.length} AI cards`);
+    state.ai.lastResults = [];
+    save(); updateCategoryFilters(); updateCardDisplay(); updateStats();
+    renderAiResults();
+    showToast('Flashcards imported!', 'success');
+});
+
+document.getElementById('ai-ask-btn').addEventListener('click', async () => {
+    const query = document.getElementById('ai-query').value.trim();
+    if (!query) return showToast('Please ask a question', 'error');
+    
+    const btn = document.getElementById('ai-ask-btn');
+    const answerBox = document.getElementById('ai-answer-box');
+    const answerText = document.getElementById('ai-answer-text');
+    
+    btn.disabled = true;
+    btn.textContent = '⏳ Thinking...';
+    
+    try {
+        const response = await callGemini(`Explain this study concept clearly and concisely: ${query}`);
+        answerText.textContent = response;
+        answerBox.style.display = 'block';
+        addActivity(`Asked AI: "${query.substring(0, 20)}..."`);
+    } catch (error) {
+        // Error handled in callGemini
+    } finally {
+        btn.disabled = false;
+        btn.textContent = '💬 Ask Question';
+    }
+});
+
+document.getElementById('ai-save-note-btn').addEventListener('click', () => {
+    const query = document.getElementById('ai-query').value;
+    const answer = document.getElementById('ai-answer-text').textContent;
+    
+    state.notes.push({
+        id: Date.now(),
+        title: `AI Explain: ${query.substring(0, 30)}`,
+        content: answer,
+        tags: ['ai-assistant'],
+        created: new Date().toISOString(),
+        updated: new Date().toISOString()
+    });
+    
+    save(); renderNotes(); updateStats();
+    showToast('Explanation saved as note!', 'success');
+});
 
 // ---- Progress & Stats ----
 function addActivity(text) {

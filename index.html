@@ -32,6 +32,9 @@
             <button id="nav-quiz" class="nav-btn" data-section="quiz">
                 <span class="nav-icon">🧠</span> Quiz
             </button>
+            <button id="nav-ai" class="nav-btn" data-section="ai">
+                <span class="nav-icon">✨</span> AI Assistant
+            </button>
             <button id="nav-timer" class="nav-btn" data-section="timer">
                 <span class="nav-icon">⏱️</span> Timer
             </button>
@@ -196,6 +199,60 @@
                 <div class="results-percentage" id="results-percentage">0%</div>
                 <div class="results-message" id="results-message"></div>
                 <button id="retake-quiz-btn" class="primary-btn">Take Another Quiz</button>
+            </div>
+        </section>
+
+        <!-- AI Assistant Section -->
+        <section id="ai-section" class="section">
+            <div class="section-header">
+                <h2>✨ Google Gemini AI Assistant</h2>
+                <p>Power up your learning with advanced AI flashcard generation and concept explanations.</p>
+            </div>
+
+            <div class="card glass-card">
+                <h3>Generate Flashcards from Text</h3>
+                <p class="form-help">Paste your study material below, and Gemini will extract the key concepts into flashcards.</p>
+                <div class="form-group">
+                    <textarea id="ai-input-text" placeholder="Paste your notes, article, or textbook chapter here..." rows="8"></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="ai-card-count">Number of cards</label>
+                        <select id="ai-card-count" class="select-input">
+                            <option value="3">3 Cards</option>
+                            <option value="5" selected>5 Cards</option>
+                            <option value="10">10 Cards</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="ai-category">Category for cards</label>
+                        <input type="text" id="ai-category-input" placeholder="e.g. Biology" autocomplete="off">
+                    </div>
+                </div>
+                <button id="ai-generate-btn" class="primary-btn">
+                    <span>✨ Generate Flashcards</span>
+                </button>
+            </div>
+
+            <div id="ai-results" class="ai-results-container" style="display:none;">
+                <h3>Generated Cards</h3>
+                <div id="ai-cards-preview" class="ai-cards-preview"></div>
+                <button id="ai-import-all-btn" class="secondary-btn">📥 Import All to Flashcards</button>
+            </div>
+
+            <div class="card glass-card">
+                <h3>Ask Gemini a Question</h3>
+                <div class="form-group">
+                    <input type="text" id="ai-query" placeholder="Ask about a concept you're struggling with..." autocomplete="off">
+                </div>
+                <button id="ai-ask-btn" class="secondary-btn">💬 Ask Question</button>
+                <div id="ai-answer-box" class="ai-answer-box" style="display:none;">
+                    <div class="ai-answer-header">
+                        <span>Gemini Response:</span>
+                        <button id="ai-save-note-btn" class="note-tag" style="border:none; cursor:pointer;">💾 Save as Note</button>
+                    </div>
+                    <div id="ai-answer-text" class="ai-answer-content"></div>
+                </div>
             </div>
         </section>
 
