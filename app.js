@@ -1,22 +1,103 @@
 /* ============================================
    StudyPal — Learning Companion App Logic
+   (Enhanced with Google Gemini AI & Firebase Firestore)
    ============================================ */
 
+// ---- Firebase Configuration & Initialization ----
+const firebaseConfig = {
+    apiKey: "AIzaSyCwmEBt-Aij0NwTuqqCp5gzz9R3O8VvjnQ",
+    authDomain: "studypal-companion-app.firebaseapp.com",
+    projectId: "studypal-companion-app",
+    storageBucket: "studypal-companion-app.appspot.com",
+    messagingSenderId: "849198329344",
+    appId: "1:849198329344:web:7f610e20e8a75d5e56e875" 
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
 // ---- State Management ----
+// Unique ID for the user to sync data to the cloud
+let userId = localStorage.getItem('sp_userId');
+if (!userId) {
+    userId = 'user_' + Math.random().toString(36).substr(2, 9);
+    localStorage.setItem('sp_userId', userId);
+}
+
 const state = {
-    flashcards: JSON.parse(localStorage.getItem('sp_flashcards') || '[]'),
-    notes: JSON.parse(localStorage.getItem('sp_notes') || '[]'),
-    stats: JSON.parse(localStorage.getItem('sp_stats') || '{"cardsStudied":0,"quizzesTaken":0,"studyMinutes":0,"quizScores":[],"streak":0,"lastStudyDate":null,"mastered":0,"activities":[]}'),
+    flashcards: [],
+    notes: [],
+    stats: {
+        cardsStudied: 0,
+        quizzesTaken: 0,
+        studyMinutes: 0,
+        quizScores: [],
+        streak: 0,
+        lastStudyDate: null,
+        mastered: 0,
+        activities: []
+    },
     currentCard: 0,
     timer: { interval: null, remaining: 25 * 60, total: 25 * 60, running: false, mode: 'focus', sessions: 0 },
     quiz: { questions: [], current: 0, score: 0, active: false },
     ai: { lastResults: [], apiKey: 'AIzaSyCwmEBt-Aij0NwTuqqCp5gzz9R3O8VvjnQ' }
 };
 
-function save() {
-    localStorage.setItem('sp_flashcards', JSON.stringify(state.flashcards));
-    localStorage.setItem('sp_notes', JSON.stringify(state.notes));
-    localStorage.setItem('sp_stats', JSON.stringify(state.stats));
+/**
+ * Saves current state to Firebase Firestore
+ */
+async function save() {
+    try {
+        await db.collection('users').doc(userId).set({
+            flashcards: state.flashcards,
+            notes: state.notes,
+            stats: state.stats,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+        console.log('Data synced to Cloud');
+    } catch (error) {
+        console.error('Cloud Sync Error:', error);
+        localStorage.setItem('sp_flashcards', JSON.stringify(state.flashcards));
+        localStorage.setItem('sp_notes', JSON.stringify(state.notes));
+        localStorage.setItem('sp_stats', JSON.stringify(state.stats));
+    }
+}
+
+/**
+ * Loads data from Firestore with a real-time listener
+ */
+function initCloudSync() {
+    showToast('Connecting to Cloud Sync...', 'info');
+
+    db.collection('users').doc(userId).onSnapshot((doc) => {
+        if (doc.exists) {
+            const data = doc.data();
+            state.flashcards = data.flashcards || [];
+            state.notes = data.notes || [];
+            state.stats = data.stats || state.stats;
+            
+            updateCategoryFilters();
+            updateCardDisplay();
+            renderNotes();
+            updateStats();
+        } else {
+            // First time migration
+            const localCards = JSON.parse(localStorage.getItem('sp_flashcards') || '[]');
+            const localNotes = JSON.parse(localStorage.getItem('sp_notes') || '[]');
+            const localStats = JSON.parse(localStorage.getItem('sp_stats') || 'null');
+            
+            if (localCards.length || localNotes.length) {
+                state.flashcards = localCards;
+                state.notes = localNotes;
+                if (localStats) state.stats = localStats;
+                save();
+            }
+        }
+    }, (error) => {
+        console.error('Snapshot Error:', error);
+        showToast('Cloud Sync Offline. Using Local Data.', 'warning');
+    });
 }
 
 // ---- Toast Notifications ----
@@ -52,6 +133,7 @@ function updateCardDisplay() {
     const frontText = document.getElementById('flashcard-front-text');
     const backText = document.getElementById('flashcard-back-text');
     const fc = document.getElementById('active-flashcard');
+    if (!fc) return;
     fc.classList.remove('flipped');
 
     if (cards.length === 0) {
@@ -69,16 +151,17 @@ function updateCardDisplay() {
 
 function updateCategoryFilters() {
     const cats = [...new Set(state.flashcards.map(c => c.category).filter(Boolean))];
-    const selects = [document.getElementById('flashcard-filter'), document.getElementById('quiz-category-select')];
+    const selects = [document.getElementById('flashcard-filter'), document.getElementById('quiz-category-select'), document.getElementById('ai-category-input')];
     selects.forEach(sel => {
+        if (!sel) return;
         const val = sel.value;
-        sel.innerHTML = '<option value="all">All Categories</option>';
+        sel.innerHTML = (sel.id === 'ai-category-input') ? '' : '<option value="all">All Categories</option>';
         cats.forEach(cat => {
             const opt = document.createElement('option');
             opt.value = cat; opt.textContent = cat;
             sel.appendChild(opt);
         });
-        sel.value = val;
+        if (sel.id !== 'ai-category-input') sel.value = val;
     });
 }
 
@@ -91,7 +174,7 @@ document.getElementById('add-flashcard-btn').addEventListener('click', () => {
     document.getElementById('flashcard-front').value = '';
     document.getElementById('flashcard-back').value = '';
     save(); updateCategoryFilters(); updateCardDisplay(); updateStats();
-    showToast('Flashcard added!', 'success');
+    showToast('Flashcard added to Cloud!', 'success');
 });
 
 document.getElementById('active-flashcard').addEventListener('click', () => {
@@ -115,7 +198,7 @@ document.querySelectorAll('.rating-btn').forEach(btn => {
         addActivity(`Studied flashcard: "${card.front.substring(0, 30)}..."`);
         save(); updateStats();
         state.currentCard++; updateCardDisplay();
-        showToast('Card rated!', 'success');
+        showToast('Rating synced!', 'success');
     });
 });
 
@@ -208,8 +291,11 @@ function updateTimerDisplay() {
     const secs = state.timer.remaining % 60;
     document.getElementById('timer-time').textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
     const progress = 1 - (state.timer.remaining / state.timer.total);
-    document.getElementById('timer-ring-progress').style.strokeDasharray = CIRCUMFERENCE;
-    document.getElementById('timer-ring-progress').style.strokeDashoffset = CIRCUMFERENCE * (1 - progress);
+    const ring = document.getElementById('timer-ring-progress');
+    if (ring) {
+        ring.style.strokeDasharray = CIRCUMFERENCE;
+        ring.style.strokeDashoffset = CIRCUMFERENCE * (1 - progress);
+    }
 }
 
 document.querySelectorAll('.timer-mode-btn').forEach(btn => {
@@ -266,6 +352,7 @@ document.getElementById('timer-reset-btn').addEventListener('click', () => {
 // ---- Notes ----
 function renderNotes(filter = '') {
     const container = document.getElementById('notes-items');
+    if (!container) return;
     let notes = [...state.notes].sort((a, b) => new Date(b.updated) - new Date(a.updated));
     if (filter) notes = notes.filter(n => n.title.toLowerCase().includes(filter) || n.content.toLowerCase().includes(filter) || (n.tags || []).some(t => t.toLowerCase().includes(filter)));
     if (notes.length === 0) {
@@ -302,7 +389,7 @@ function renderNotes(filter = '') {
             e.stopPropagation();
             state.notes = state.notes.filter(n => n.id != btn.dataset.id);
             save(); renderNotes();
-            showToast('Note deleted', 'info');
+            showToast('Note deleted from Cloud', 'info');
         });
     });
 }
@@ -318,11 +405,11 @@ document.getElementById('save-note-btn').addEventListener('click', () => {
         if (note) { note.title = title; note.content = content; note.tags = tags; note.updated = new Date().toISOString(); }
         delete document.getElementById('save-note-btn').dataset.editId;
         document.getElementById('save-note-btn').innerHTML = '💾 Save Note';
-        showToast('Note updated!', 'success');
+        showToast('Note updated in Cloud!', 'success');
     } else {
         state.notes.push({ id: Date.now(), title, content, tags, created: new Date().toISOString(), updated: new Date().toISOString() });
         addActivity(`Created note: "${title}"`);
-        showToast('Note saved!', 'success');
+        showToast('Note saved to Cloud!', 'success');
     }
     document.getElementById('note-title').value = '';
     document.getElementById('note-content').value = '';
@@ -333,11 +420,6 @@ document.getElementById('save-note-btn').addEventListener('click', () => {
 document.getElementById('notes-search').addEventListener('input', (e) => renderNotes(e.target.value.toLowerCase()));
 
 // ---- AI Assistant (Google Gemini) ----
-/**
- * Calls Google Gemini API to generate flashcards or answer questions
- * @param {string} prompt - The user prompt
- * @returns {Promise<string>} - AI response text
- */
 async function callGemini(prompt) {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${state.ai.apiKey}`;
     try {
@@ -375,7 +457,6 @@ document.getElementById('ai-generate-btn').addEventListener('click', async () =>
 
     try {
         const response = await callGemini(prompt);
-        // Clean up response if it contains markdown code blocks
         const jsonStr = response.replace(/```json/g, '').replace(/```/g, '').trim();
         const cards = JSON.parse(jsonStr);
         
@@ -393,6 +474,7 @@ document.getElementById('ai-generate-btn').addEventListener('click', async () =>
 function renderAiResults() {
     const container = document.getElementById('ai-cards-preview');
     const resultsArea = document.getElementById('ai-results');
+    if (!container || !resultsArea) return;
     
     if (state.ai.lastResults.length === 0) {
         resultsArea.style.display = 'none';
@@ -414,7 +496,7 @@ document.getElementById('ai-import-all-btn').addEventListener('click', () => {
     state.ai.lastResults = [];
     save(); updateCategoryFilters(); updateCardDisplay(); updateStats();
     renderAiResults();
-    showToast('Flashcards imported!', 'success');
+    showToast('Flashcards imported to Cloud!', 'success');
 });
 
 document.getElementById('ai-ask-btn').addEventListener('click', async () => {
@@ -473,7 +555,10 @@ function updateStreak() {
 }
 
 function updateStats() {
-    document.getElementById('total-cards').textContent = state.stats.cardsStudied;
+    const totalCards = document.getElementById('total-cards');
+    if (!totalCards) return;
+    
+    totalCards.textContent = state.stats.cardsStudied;
     document.getElementById('total-quizzes').textContent = state.stats.quizzesTaken;
     document.getElementById('total-minutes').textContent = state.stats.studyMinutes;
     document.getElementById('streak-count').textContent = state.stats.streak;
@@ -485,16 +570,18 @@ function updateStats() {
     document.getElementById('total-study-time').textContent = `${hrs}h ${mins}m`;
 
     const actLog = document.getElementById('activity-log');
-    if (state.stats.activities.length === 0) {
-        actLog.innerHTML = '<div class="empty-state"><span class="empty-icon">📅</span><p>No activity yet. Start learning!</p></div>';
-    } else {
-        actLog.innerHTML = state.stats.activities.slice(0, 20).map(a => `
-            <div class="activity-item">
-                <span class="activity-icon">📌</span>
-                <span class="activity-text">${escapeHtml(a.text)}</span>
-                <span class="activity-time">${timeAgo(a.time)}</span>
-            </div>
-        `).join('');
+    if (actLog) {
+        if (state.stats.activities.length === 0) {
+            actLog.innerHTML = '<div class="empty-state"><span class="empty-icon">📅</span><p>No activity yet. Start learning!</p></div>';
+        } else {
+            actLog.innerHTML = state.stats.activities.slice(0, 20).map(a => `
+                <div class="activity-item">
+                    <span class="activity-icon">📌</span>
+                    <span class="activity-text">${escapeHtml(a.text)}</span>
+                    <span class="activity-time">${timeAgo(a.time)}</span>
+                </div>
+            `).join('');
+        }
     }
 }
 
@@ -503,17 +590,22 @@ document.getElementById('export-data-btn').addEventListener('click', () => {
     const data = { flashcards: state.flashcards, notes: state.notes, stats: state.stats };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-    a.download = `studypal-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.download = `studypal-cloud-backup-${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     showToast('Data exported!', 'success');
 });
 
-document.getElementById('clear-data-btn').addEventListener('click', () => {
-    if (!confirm('Are you sure? This will delete ALL your flashcards, notes, and progress.')) return;
-    localStorage.removeItem('sp_flashcards');
-    localStorage.removeItem('sp_notes');
-    localStorage.removeItem('sp_stats');
-    location.reload();
+document.getElementById('clear-data-btn').addEventListener('click', async () => {
+    if (!confirm('Are you sure? This will delete ALL your cloud-synced data.')) return;
+    try {
+        await db.collection('users').doc(userId).delete();
+        localStorage.removeItem('sp_flashcards');
+        localStorage.removeItem('sp_notes');
+        localStorage.removeItem('sp_stats');
+        location.reload();
+    } catch (e) {
+        showToast('Failed to clear cloud data', 'error');
+    }
 });
 
 // ---- Utilities ----
@@ -532,8 +624,5 @@ function timeAgo(dateStr) {
 }
 
 // ---- Init ----
-updateCategoryFilters();
-updateCardDisplay();
-renderNotes();
+initCloudSync();
 updateTimerDisplay();
-updateStats();
