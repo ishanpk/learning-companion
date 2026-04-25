@@ -13,6 +13,11 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# Provide build-time environment variables
+ENV NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyCwmEBt-Aij0NwTuqqCp5gzz9R3O8VvjnQ
+ENV GEMINI_API_KEY=AIzaSyCJ8IkSI2EEapSwrc69k6yOgRQ4CF6nnJk
+
+
 # Next.js collects completely anonymous telemetry data about general usage.
 # Learn more here: https://nextjs.org/telemetry
 # Uncomment the following line in case you want to disable telemetry during the build.
