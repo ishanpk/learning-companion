@@ -75,7 +75,17 @@ export function DailyWarmup({ isOpen, onClose, onComplete }: DailyWarmupProps) {
   const activeCards = dueCards.length > 0 ? dueCards : flashcards
   const card = activeCards[currentCard]
   const progress = ((currentCard + 1) / activeCards.length) * 100
-  const isCorrect = selectedAnswer === card.correct
+  
+  // Type-safe correctness check
+  const getIsCorrect = (index: number | null) => {
+    if (index === null) return false;
+    if ('correct' in card) {
+      return index === card.correct;
+    }
+    return card.options?.[index] === card.correctAnswer;
+  };
+
+  const isCorrect = getIsCorrect(selectedAnswer)
 
   const handleSelect = (index: number) => {
     if (showResult) return
@@ -85,7 +95,7 @@ export function DailyWarmup({ isOpen, onClose, onComplete }: DailyWarmupProps) {
   const handleSubmit = () => {
     if (selectedAnswer === null) return
     setShowResult(true)
-    const correct = selectedAnswer === card.correct
+    const correct = getIsCorrect(selectedAnswer)
     setResults([...results, correct])
     
     // Update the card in the store if it's a real review card
@@ -201,18 +211,18 @@ export function DailyWarmup({ isOpen, onClose, onComplete }: DailyWarmupProps) {
               {/* Main card */}
               <div className="relative bg-secondary/30 border border-border/60 rounded-2xl p-6">
                 <p className="text-xs text-muted-foreground mb-3">
-                  {'lastReviewed' in card && card.lastReviewed > 0 
+                  {'intervalIndex' in card && card.lastReviewed 
                     ? `Next: ${getNextReviewLabel(card as ReviewCard)}` 
                     : `Topic: ${card.topic}`}
                 </p>
                 <h3 className="text-lg font-bold text-foreground mb-5 leading-relaxed">
-                  {card.concept}
+                  {'question' in card ? card.question : (card as any).concept}
                 </h3>
 
                 <div className="space-y-2.5">
-                  {card.options.map((option, index) => {
+                  {(card.options || []).map((option, index) => {
                     const isSelected = selectedAnswer === index
-                    const isCorrectAnswer = index === card.correct
+                    const isCorrectAnswer = 'correct' in card ? index === card.correct : option === card.correctAnswer
 
                     return (
                       <button

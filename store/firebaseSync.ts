@@ -1,6 +1,6 @@
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
-import { Skill, GeneratedCourse } from './types';
+import { Skill, GeneratedCourse, ReviewCard } from './types';
 
 // Priorities: Firebase Auth UID > localStorage ID
 export function getUserId(): string {

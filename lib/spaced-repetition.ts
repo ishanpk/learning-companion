@@ -1,3 +1,5 @@
+import { ReviewCard } from '@/store/types';
+
 /**
  * Spaced Repetition Scheduling System
  * Implements a simplified SM-2 algorithm for quiz review scheduling.
@@ -5,18 +7,6 @@
  * Intervals: 1 day → 3 days → 7 days → 14 days → 30 days
  */
 
-export interface ReviewCard {
-  /** Unique ID (e.g. `courseId:moduleIndex:quizIndex`) */
-  id: string;
-  /** Unix timestamp of last review */
-  lastReviewed: number;
-  /** Unix timestamp when the next review is due */
-  nextReview: number;
-  /** How many consecutive correct answers (0-5) */
-  streak: number;
-  /** Current interval index (maps to INTERVALS array) */
-  intervalIndex: number;
-}
 
 /** Intervals in milliseconds: 1d, 3d, 7d, 14d, 30d */
 const INTERVALS = [

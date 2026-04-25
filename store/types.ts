@@ -38,8 +38,8 @@ export interface ReviewCard {
   streak: number;
   intervalIndex: number;
   // Metadata for display
-  question: string;
-  options: string[];
-  correctAnswer: string;
-  topic: string;
+  question?: string;
+  options?: string[];
+  correctAnswer?: string;
+  topic?: string;
 }

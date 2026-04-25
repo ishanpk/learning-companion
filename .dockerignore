@@ -1,0 +1,14 @@
+node_modules
+.next
+.git
+.github
+.firebase
+.husky
+__tests__
+e2e
+*.test.ts
+*.test.tsx
+playwright.config.ts
+vitest.config.ts
+README.md
+.env.local

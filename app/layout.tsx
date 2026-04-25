@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Outfit, JetBrains_Mono } from 'next/font/google'
 import { FirebaseProvider } from '@/components/firebase-provider'
 import './globals.css'
@@ -13,6 +13,12 @@ const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"], 
   variable: "--font-mono" 
 });
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+}
 
 export const metadata: Metadata = {
   title: 'StudyPal | AI-Powered Personalized Learning Companion',
@@ -42,7 +48,6 @@ export const metadata: Metadata = {
     description: 'Master subjects faster with AI-generated curricula and interactive scenarios.',
     images: ['/og-image.png'],
   },
-  viewport: 'width=device-width, initial-scale=1, maximum-scale=5',
   robots: 'index, follow',
 }
 

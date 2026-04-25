@@ -78,6 +78,7 @@ export function QuizView({ onBack, onComplete, onSwitchToScenario }: QuizViewPro
   const [currentQuestion, setCurrentQuestion] = useState(0)
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null)
   const [showResult, setShowResult] = useState(false)
+  const [answers, setAnswers] = useState<number[]>([])
   const [isComplete, setIsComplete] = useState(false)
   const [quizMode, setQuizMode] = useState<"standard" | "scenario">("standard")
   const addReviewCard = useCourseStore((s) => s.addReviewCard)
