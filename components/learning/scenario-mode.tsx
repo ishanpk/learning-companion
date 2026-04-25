@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Progress } from "@/components/ui/progress"
-import { ArrowLeft, ArrowRight, Terminal, AlertTriangle, CheckCircle2, XCircle, Lightbulb, Code2 } from "lucide-react"
+import { ArrowLeft, ArrowRight, Terminal, AlertTriangle, CheckCircle2, Lightbulb, Code2, Trophy } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface ScenarioModeProps {
@@ -113,21 +113,21 @@ export function ScenarioMode({ onBack, onComplete }: ScenarioModeProps) {
 
   if (isComplete) {
     return (
-      <div className="flex-1 flex items-center justify-center p-6">
-        <Card className="max-w-lg w-full border-border/50 bg-card/50 backdrop-blur-xl">
+      <div className="flex-1 flex items-center justify-center p-6 bg-background">
+        <Card className="max-w-md w-full border-border/60 bg-card shadow-xl">
           <CardContent className="p-8 text-center">
-            <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-accent to-primary flex items-center justify-center">
-              <Terminal className="w-10 h-10 text-primary-foreground" />
+            <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-primary/10 flex items-center justify-center">
+              <Trophy className="w-10 h-10 text-primary" />
             </div>
             <h2 className="text-2xl font-bold text-foreground mb-2">
               Scenario Mode Complete!
             </h2>
             <p className="text-muted-foreground mb-6">
-              {"You've applied your knowledge to real-world scenarios."}
+              You&apos;ve applied your knowledge to real-world scenarios.
             </p>
 
-            <div className="bg-secondary/50 rounded-xl p-6 mb-6">
-              <div className="text-5xl font-bold text-accent mb-2">{score}%</div>
+            <div className="bg-secondary/50 rounded-2xl p-6 mb-6">
+              <div className="text-5xl font-bold text-primary mb-2">{score}%</div>
               <p className="text-sm text-muted-foreground">
                 {correctCount} of {scenarios.length} scenarios solved
               </p>
@@ -137,13 +137,13 @@ export function ScenarioMode({ onBack, onComplete }: ScenarioModeProps) {
               <Button
                 variant="outline"
                 onClick={onBack}
-                className="flex-1 border-border/50"
+                className="flex-1 border-border/60 rounded-xl cursor-pointer"
               >
                 Back to Quiz
               </Button>
               <Button
                 onClick={onComplete}
-                className="flex-1 bg-gradient-to-r from-primary to-accent hover:opacity-90 text-primary-foreground"
+                className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl cursor-pointer shadow-md shadow-primary/15"
               >
                 Continue
               </Button>
@@ -155,23 +155,23 @@ export function ScenarioMode({ onBack, onComplete }: ScenarioModeProps) {
   }
 
   return (
-    <div className="flex-1 overflow-auto">
-      <div className="max-w-7xl mx-auto p-6 lg:p-8 pb-24 lg:pb-8">
+    <div className="flex-1 overflow-auto bg-background">
+      <div className="max-w-7xl mx-auto p-6 lg:p-8 pb-28 lg:pb-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <button
             onClick={onBack}
-            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors duration-200 cursor-pointer"
           >
             <ArrowLeft className="w-5 h-5" />
-            <span className="text-sm font-medium">Back to Quiz</span>
+            <span className="text-sm font-semibold">Back to Quiz</span>
           </button>
           <div className="flex items-center gap-4">
             <span className={cn(
-              "px-3 py-1 rounded-full text-xs font-medium",
-              scenario.difficulty === "Easy" && "bg-accent/20 text-accent",
-              scenario.difficulty === "Medium" && "bg-primary/20 text-primary",
-              scenario.difficulty === "Hard" && "bg-destructive/20 text-destructive"
+              "px-3 py-1.5 rounded-full text-xs font-bold",
+              scenario.difficulty === "Easy" && "bg-primary/10 text-primary",
+              scenario.difficulty === "Medium" && "bg-accent/10 text-accent",
+              scenario.difficulty === "Hard" && "bg-amber-100 text-amber-700"
             )}>
               {scenario.difficulty}
             </span>
@@ -180,38 +180,38 @@ export function ScenarioMode({ onBack, onComplete }: ScenarioModeProps) {
 
         {/* Progress */}
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-foreground">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-sm font-semibold text-foreground">
               Scenario {currentScenario + 1} of {scenarios.length}
             </span>
-            <span className="text-sm text-muted-foreground">{scenario.category}</span>
+            <span className="text-sm text-muted-foreground font-medium">{scenario.category}</span>
           </div>
-          <Progress value={progress} className="h-2" />
+          <Progress value={progress} className="h-2.5 rounded-full" />
         </div>
 
         {/* Split Screen Layout */}
         <div className="grid lg:grid-cols-2 gap-6">
           {/* Left: Buggy Code */}
-          <Card className="border-border/50 bg-card/50 backdrop-blur-xl">
-            <CardHeader className="border-b border-border/50">
-              <CardTitle className="text-lg font-semibold text-foreground flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5 text-orange-400" />
+          <Card className="border-border/60 bg-card shadow-sm">
+            <CardHeader className="border-b border-border/60 pb-4">
+              <CardTitle className="text-lg font-bold text-foreground flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-accent" />
                 {scenario.title}
               </CardTitle>
-              <p className="text-sm text-muted-foreground">{scenario.description}</p>
+              <p className="text-sm text-muted-foreground leading-relaxed">{scenario.description}</p>
             </CardHeader>
             <CardContent className="p-0">
               <div className="relative">
                 <div className="absolute top-3 left-3 flex items-center gap-2">
                   <div className="flex gap-1.5">
-                    <div className="w-3 h-3 rounded-full bg-red-500/80" />
-                    <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
-                    <div className="w-3 h-3 rounded-full bg-green-500/80" />
+                    <div className="w-3 h-3 rounded-full bg-red-400" />
+                    <div className="w-3 h-3 rounded-full bg-amber-400" />
+                    <div className="w-3 h-3 rounded-full bg-green-400" />
                   </div>
-                  <span className="text-xs text-muted-foreground ml-2">buggy-code.js</span>
+                  <span className="text-xs text-muted-foreground ml-2 font-medium">buggy-code.js</span>
                 </div>
-                <pre className="p-4 pt-10 bg-background/50 rounded-b-xl overflow-x-auto">
-                  <code className="text-sm font-mono text-foreground/90 leading-relaxed whitespace-pre-wrap">
+                <pre className="p-4 pt-10 bg-secondary/30 rounded-b-xl overflow-x-auto">
+                  <code className="text-sm font-mono text-foreground leading-relaxed whitespace-pre-wrap">
                     {scenario.buggyCode}
                   </code>
                 </pre>
@@ -220,9 +220,9 @@ export function ScenarioMode({ onBack, onComplete }: ScenarioModeProps) {
           </Card>
 
           {/* Right: Solution Input */}
-          <Card className="border-border/50 bg-card/50 backdrop-blur-xl">
-            <CardHeader className="border-b border-border/50">
-              <CardTitle className="text-lg font-semibold text-foreground flex items-center gap-2">
+          <Card className="border-border/60 bg-card shadow-sm">
+            <CardHeader className="border-b border-border/60 pb-4">
+              <CardTitle className="text-lg font-bold text-foreground flex items-center gap-2">
                 <Code2 className="w-5 h-5 text-primary" />
                 Your Solution
               </CardTitle>
@@ -233,8 +233,8 @@ export function ScenarioMode({ onBack, onComplete }: ScenarioModeProps) {
             <CardContent className="p-4 space-y-4">
               <div className="relative">
                 <div className="absolute top-3 left-3 flex items-center gap-2">
-                  <Terminal className="w-4 h-4 text-accent" />
-                  <span className="text-xs text-muted-foreground">solution.txt</span>
+                  <Terminal className="w-4 h-4 text-primary" />
+                  <span className="text-xs text-muted-foreground font-medium">solution.txt</span>
                 </div>
                 <Textarea
                   value={userSolution}
@@ -242,9 +242,9 @@ export function ScenarioMode({ onBack, onComplete }: ScenarioModeProps) {
                   placeholder="Type your solution here... Explain what's wrong and how to fix it."
                   disabled={submitted}
                   className={cn(
-                    "min-h-[200px] pt-10 bg-background/50 border-border/50 font-mono text-sm resize-none",
-                    submitted && isCorrect && "border-accent",
-                    submitted && !isCorrect && "border-destructive"
+                    "min-h-[200px] pt-10 bg-secondary/30 border-border/60 font-mono text-sm resize-none rounded-xl",
+                    submitted && isCorrect && "border-primary",
+                    submitted && !isCorrect && "border-accent"
                   )}
                 />
               </div>
@@ -253,7 +253,7 @@ export function ScenarioMode({ onBack, onComplete }: ScenarioModeProps) {
               {!submitted && (
                 <button
                   onClick={() => setShowHint(!showHint)}
-                  className="flex items-center gap-2 text-sm text-primary hover:underline"
+                  className="flex items-center gap-2 text-sm text-primary hover:underline cursor-pointer font-medium"
                 >
                   <Lightbulb className="w-4 h-4" />
                   {showHint ? "Hide Hint" : "Show Hint"}
@@ -261,7 +261,7 @@ export function ScenarioMode({ onBack, onComplete }: ScenarioModeProps) {
               )}
               
               {showHint && !submitted && (
-                <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
+                <div className="bg-primary/5 border border-primary/20 rounded-xl p-4">
                   <p className="text-sm text-foreground/80">{scenario.hint}</p>
                 </div>
               )}
@@ -269,25 +269,25 @@ export function ScenarioMode({ onBack, onComplete }: ScenarioModeProps) {
               {/* Result */}
               {submitted && (
                 <div className={cn(
-                  "rounded-lg p-4 border",
+                  "rounded-xl p-4 border",
                   isCorrect 
-                    ? "bg-accent/10 border-accent/30" 
-                    : "bg-orange-500/10 border-orange-500/30"
+                    ? "bg-primary/5 border-primary/20" 
+                    : "bg-accent/5 border-accent/20"
                 )}>
                   <div className="flex items-start gap-3">
                     {isCorrect ? (
-                      <CheckCircle2 className="w-5 h-5 text-accent shrink-0 mt-0.5" />
+                      <CheckCircle2 className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                     ) : (
-                      <AlertTriangle className="w-5 h-5 text-orange-400 shrink-0 mt-0.5" />
+                      <AlertTriangle className="w-5 h-5 text-accent shrink-0 mt-0.5" />
                     )}
                     <div>
                       <p className={cn(
-                        "font-medium mb-1",
-                        isCorrect ? "text-accent" : "text-orange-400"
+                        "font-bold mb-1",
+                        isCorrect ? "text-primary" : "text-accent"
                       )}>
                         {isCorrect ? "Great job!" : "Almost there!"}
                       </p>
-                      <p className="text-sm text-foreground/80">{scenario.explanation}</p>
+                      <p className="text-sm text-foreground/80 leading-relaxed">{scenario.explanation}</p>
                     </div>
                   </div>
                 </div>
@@ -299,14 +299,14 @@ export function ScenarioMode({ onBack, onComplete }: ScenarioModeProps) {
                   <Button
                     onClick={handleSubmit}
                     disabled={!userSolution.trim()}
-                    className="px-6 bg-gradient-to-r from-primary to-accent hover:opacity-90 text-primary-foreground disabled:opacity-50"
+                    className="px-6 bg-primary hover:bg-primary/90 text-primary-foreground disabled:opacity-50 rounded-xl cursor-pointer shadow-md shadow-primary/15"
                   >
                     Submit Solution
                   </Button>
                 ) : (
                   <Button
                     onClick={handleNext}
-                    className="px-6 bg-gradient-to-r from-primary to-accent hover:opacity-90 text-primary-foreground"
+                    className="px-6 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl cursor-pointer shadow-md shadow-primary/15"
                   >
                     {currentScenario < scenarios.length - 1 ? (
                       <>

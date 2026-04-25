@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Play, Pause, RotateCcw, Timer } from "lucide-react"
+import { Play, Pause, RotateCcw, Timer, Coffee } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const FOCUS_TIME = 25 * 60 // 25 minutes in seconds
@@ -32,58 +32,61 @@ export function FocusTimer() {
   }, [isRunning, timeLeft])
 
   return (
-    <Card className="border-border/50 bg-card/50 backdrop-blur-xl">
-      <CardContent className="p-4">
-        <div className="flex items-center gap-2 mb-4">
-          <Timer className="w-4 h-4 text-primary" />
-          <span className="text-sm font-medium text-foreground">Focus Timer</span>
+    <Card className="border-border/60 bg-card shadow-sm">
+      <CardContent className="p-5">
+        <div className="flex items-center gap-2 mb-5">
+          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+            <Timer className="w-4 h-4 text-primary" />
+          </div>
+          <span className="text-sm font-bold text-foreground">Focus Timer</span>
         </div>
 
         {/* Circular Progress */}
-        <div className="relative w-32 h-32 mx-auto mb-4">
+        <div className="relative w-36 h-36 mx-auto mb-5">
           <svg className="w-full h-full -rotate-90">
             <circle
-              cx="64"
-              cy="64"
-              r="58"
+              cx="72"
+              cy="72"
+              r="64"
               fill="none"
               stroke="currentColor"
-              strokeWidth="8"
+              strokeWidth="10"
               className="text-secondary"
             />
             <circle
-              cx="64"
-              cy="64"
-              r="58"
+              cx="72"
+              cy="72"
+              r="64"
               fill="none"
-              stroke="url(#timerGradient)"
-              strokeWidth="8"
+              stroke="url(#focusTimerGradient)"
+              strokeWidth="10"
               strokeLinecap="round"
-              strokeDasharray={2 * Math.PI * 58}
-              strokeDashoffset={2 * Math.PI * 58 * (1 - progress / 100)}
+              strokeDasharray={2 * Math.PI * 64}
+              strokeDashoffset={2 * Math.PI * 64 * (1 - progress / 100)}
               className="transition-all duration-1000 ease-linear"
             />
             <defs>
-              <linearGradient id="timerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <linearGradient id="focusTimerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stopColor="var(--primary)" />
                 <stop offset="100%" stopColor="var(--accent)" />
               </linearGradient>
             </defs>
           </svg>
-          <div className="absolute inset-0 flex items-center justify-center">
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
             <span className="text-3xl font-bold text-foreground tabular-nums">
               {String(minutes).padStart(2, "0")}:{String(seconds).padStart(2, "0")}
             </span>
+            <span className="text-xs text-muted-foreground mt-1">minutes</span>
           </div>
         </div>
 
         {/* Controls */}
-        <div className="flex items-center justify-center gap-2">
+        <div className="flex items-center justify-center gap-3">
           <Button
             variant="outline"
             size="icon"
             onClick={reset}
-            className="border-border/50 hover:bg-secondary"
+            className="border-border/60 hover:bg-secondary rounded-xl cursor-pointer"
           >
             <RotateCcw className="w-4 h-4" />
           </Button>
@@ -91,10 +94,10 @@ export function FocusTimer() {
             size="lg"
             onClick={() => setIsRunning(!isRunning)}
             className={cn(
-              "px-8 transition-all duration-300",
+              "px-8 rounded-xl transition-all duration-200 cursor-pointer shadow-md",
               isRunning
-                ? "bg-orange-500 hover:bg-orange-600 text-white"
-                : "bg-gradient-to-r from-primary to-accent hover:opacity-90 text-primary-foreground"
+                ? "bg-accent hover:bg-accent/90 text-accent-foreground shadow-accent/15"
+                : "bg-primary hover:bg-primary/90 text-primary-foreground shadow-primary/15"
             )}
           >
             {isRunning ? (
@@ -109,6 +112,14 @@ export function FocusTimer() {
               </>
             )}
           </Button>
+        </div>
+
+        {/* Break reminder */}
+        <div className="mt-5 pt-4 border-t border-border/60">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Coffee className="w-4 h-4 text-accent" />
+            <span>Take a 5 min break after each session</span>
+          </div>
         </div>
       </CardContent>
     </Card>

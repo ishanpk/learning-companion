@@ -1,7 +1,7 @@
 "use client"
 
 import { cn } from "@/lib/utils"
-import { LayoutDashboard, Route, BarChart3, Settings, Zap } from "lucide-react"
+import { LayoutDashboard, Route, Zap, Settings } from "lucide-react"
 
 interface MobileNavProps {
   activeView: string
@@ -17,8 +17,8 @@ const navItems = [
 
 export function MobileNav({ activeView, onViewChange }: MobileNavProps) {
   return (
-    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-t border-border">
-      <div className="flex items-center justify-around py-2 px-4">
+    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-lg border-t border-border/60 shadow-lg shadow-black/5">
+      <div className="flex items-center justify-around py-3 px-4">
         {navItems.map((item) => {
           const Icon = item.icon
           const isActive = activeView === item.id
@@ -27,14 +27,14 @@ export function MobileNav({ activeView, onViewChange }: MobileNavProps) {
               key={item.id}
               onClick={() => onViewChange(item.id)}
               className={cn(
-                "flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-all duration-200",
+                "flex flex-col items-center gap-1.5 px-5 py-2 rounded-xl transition-all duration-200 cursor-pointer",
                 isActive
-                  ? "text-primary"
+                  ? "text-primary bg-primary/10"
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
-              <Icon className={cn("w-5 h-5", isActive && "drop-shadow-[0_0_8px_var(--primary)]")} />
-              <span className="text-xs font-medium">{item.label}</span>
+              <Icon className="w-5 h-5" />
+              <span className="text-xs font-semibold">{item.label}</span>
             </button>
           )
         })}

@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { CourseCard } from "./course-card"
-import { Sparkles, Search, TrendingUp, Target, Clock, Zap } from "lucide-react"
+import { Sparkles, Search, TrendingUp, Target, Clock, Zap, Sun, Heart } from "lucide-react"
 
 interface DashboardViewProps {
   onStartStudy: () => void
@@ -45,10 +45,10 @@ const courses = [
 ]
 
 const stats = [
-  { label: "Study Hours", value: "47.5", icon: Clock, change: "+12%" },
-  { label: "Completed", value: "23", icon: Target, change: "+3" },
-  { label: "Current Streak", value: "7", icon: Zap, change: "Best: 14" },
-  { label: "This Week", value: "8.2h", icon: TrendingUp, change: "+23%" },
+  { label: "Study Hours", value: "47.5", icon: Clock, change: "+12%", color: "text-primary" },
+  { label: "Completed", value: "23", icon: Target, change: "+3", color: "text-accent" },
+  { label: "Current Streak", value: "7", icon: Zap, change: "Best: 14", color: "text-amber-500" },
+  { label: "This Week", value: "8.2h", icon: TrendingUp, change: "+23%", color: "text-primary" },
 ]
 
 export function DashboardView({ onStartStudy }: DashboardViewProps) {
@@ -56,41 +56,47 @@ export function DashboardView({ onStartStudy }: DashboardViewProps) {
 
   return (
     <div className="flex-1 overflow-auto">
-      <div className="max-w-6xl mx-auto p-6 lg:p-8 pb-24 lg:pb-8 space-y-8">
-        {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">
-            Welcome back, <span className="text-primary">learner</span>
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            {"Ready to continue your learning journey? Let's make today count."}
-          </p>
+      <div className="max-w-5xl mx-auto p-6 lg:p-8 pb-28 lg:pb-8 space-y-8">
+        {/* Welcome Header */}
+        <div className="flex items-start justify-between">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Sun className="w-6 h-6 text-accent" />
+              <span className="text-sm font-medium text-muted-foreground">Good morning</span>
+            </div>
+            <h1 className="text-3xl font-bold text-foreground">
+              Welcome back!
+            </h1>
+            <p className="text-muted-foreground mt-1 text-lg">
+              Ready to continue learning? You&apos;re doing great.
+            </p>
+          </div>
         </div>
 
         {/* Create New Learning Path */}
-        <Card className="border-primary/20 bg-gradient-to-r from-primary/5 via-card to-accent/5 backdrop-blur-sm overflow-hidden">
+        <Card className="border-border/60 bg-card shadow-sm overflow-hidden">
           <CardContent className="p-6">
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="relative flex-1">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
-                  placeholder="What do you want to learn today?"
+                  placeholder="What would you like to learn today?"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-12 pr-4 py-6 text-lg bg-background/50 border-border/50 focus:border-primary/50 placeholder:text-muted-foreground"
+                  className="pl-12 pr-4 py-6 text-base bg-secondary/50 border-border/60 focus:border-primary focus:ring-primary/20 placeholder:text-muted-foreground rounded-xl"
                 />
               </div>
               <Button 
                 size="lg"
-                className="px-8 bg-gradient-to-r from-primary via-primary/90 to-accent hover:opacity-90 text-primary-foreground shadow-lg shadow-primary/25 transition-all duration-300 whitespace-nowrap"
+                className="px-6 bg-primary hover:bg-primary/90 text-primary-foreground shadow-md shadow-primary/15 transition-all duration-200 rounded-xl cursor-pointer whitespace-nowrap"
               >
                 <Sparkles className="w-5 h-5 mr-2" />
-                Create Learning Path
+                Create Path
               </Button>
             </div>
-            <p className="text-xs text-muted-foreground mt-3 flex items-center gap-2">
-              <Sparkles className="w-3 h-3 text-primary" />
-              AI will generate a personalized curriculum based on your goals
+            <p className="text-sm text-muted-foreground mt-4 flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-primary" />
+              AI will create a personalized learning path just for you
             </p>
           </CardContent>
         </Card>
@@ -100,16 +106,16 @@ export function DashboardView({ onStartStudy }: DashboardViewProps) {
           {stats.map((stat) => {
             const Icon = stat.icon
             return (
-              <Card key={stat.label} className="border-border/50 bg-card/50 backdrop-blur-sm">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <Icon className="w-5 h-5 text-primary" />
+              <Card key={stat.label} className="border-border/60 bg-card shadow-sm hover:shadow-md transition-shadow duration-200">
+                <CardContent className="p-5">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className={`w-11 h-11 rounded-xl bg-secondary flex items-center justify-center`}>
+                      <Icon className={`w-5 h-5 ${stat.color}`} />
                     </div>
-                    <span className="text-xs text-accent font-medium">{stat.change}</span>
+                    <span className="text-xs text-primary font-semibold bg-primary/10 px-2 py-1 rounded-full">{stat.change}</span>
                   </div>
                   <p className="text-2xl font-bold text-foreground">{stat.value}</p>
-                  <p className="text-xs text-muted-foreground">{stat.label}</p>
+                  <p className="text-sm text-muted-foreground mt-0.5">{stat.label}</p>
                 </CardContent>
               </Card>
             )
@@ -118,11 +124,16 @@ export function DashboardView({ onStartStudy }: DashboardViewProps) {
 
         {/* Current Progress */}
         <div>
-          <CardHeader className="px-0 pt-0">
-            <CardTitle className="text-xl font-semibold text-foreground flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-primary" />
-              Current Progress
-            </CardTitle>
+          <CardHeader className="px-0 pt-0 pb-4">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-xl font-bold text-foreground flex items-center gap-2">
+                <Heart className="w-5 h-5 text-primary" />
+                Your Learning Journey
+              </CardTitle>
+              <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground cursor-pointer">
+                View all
+              </Button>
+            </div>
           </CardHeader>
           <div className="grid gap-4">
             {courses.map((course) => (
