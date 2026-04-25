@@ -11,43 +11,14 @@ interface CapstoneViewProps {
   onAcceptProject: (projectId: string) => void
 }
 
-const capstoneProjects = [
-  {
-    id: "1",
-    title: "Build a Real-Time ML Dashboard",
-    description: "Create an interactive dashboard that visualizes machine learning model predictions in real-time. Implement data streaming, model inference, and dynamic chart updates.",
-    difficulty: "Advanced",
-    estimatedHours: 12,
-    skills: ["Neural Networks", "Data Visualization", "Real-time Systems"],
-    icon: "📊",
-    gradient: "from-primary to-accent",
-  },
-  {
-    id: "2",
-    title: "Sentiment Analysis API",
-    description: "Design and deploy a production-ready REST API that analyzes text sentiment using a pre-trained model. Include rate limiting, caching, and comprehensive documentation.",
-    difficulty: "Intermediate",
-    estimatedHours: 8,
-    skills: ["API Design", "Model Deployment", "Backend Development"],
-    icon: "🔮",
-    gradient: "from-accent to-teal-400",
-  },
-  {
-    id: "3",
-    title: "Image Classification App",
-    description: "Build a mobile-responsive web application that classifies uploaded images using transfer learning. Implement drag-and-drop uploads and confidence scores.",
-    difficulty: "Intermediate",
-    estimatedHours: 10,
-    skills: ["Transfer Learning", "Frontend Development", "Image Processing"],
-    icon: "🖼️",
-    gradient: "from-purple-500 to-primary",
-  },
-]
+// Removed hardcoded array, fetching from backend
 
 export function CapstoneView({ onBack, onAcceptProject }: CapstoneViewProps) {
   const [showCelebration, setShowCelebration] = useState(true)
   const [confettiPieces, setConfettiPieces] = useState<Array<{ id: number; left: number; delay: number; color: string }>>([])
   const [selectedProject, setSelectedProject] = useState<string | null>(null)
+  const [projects, setProjects] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     // Generate confetti pieces
@@ -61,6 +32,22 @@ export function CapstoneView({ onBack, onAcceptProject }: CapstoneViewProps) {
 
     // Hide celebration after animation
     const timer = setTimeout(() => setShowCelebration(false), 4000)
+
+    // Fetch projects from backend
+    const fetchProjects = async () => {
+      try {
+        const res = await fetch('/api/capstone')
+        if (!res.ok) throw new Error('Failed to fetch')
+        const data = await res.json()
+        setProjects(data.projects || [])
+      } catch (err) {
+        console.error(err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchProjects()
+
     return () => clearTimeout(timer)
   }, [])
 
@@ -194,8 +181,14 @@ export function CapstoneView({ onBack, onAcceptProject }: CapstoneViewProps) {
         </div>
 
         {/* Capstone Project Cards */}
-        <div className="grid lg:grid-cols-3 gap-6">
-          {capstoneProjects.map((project) => (
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-20 animate-in fade-in duration-500">
+             <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
+             <p className="text-muted-foreground animate-pulse">Generating your personalized capstone challenges with AI...</p>
+          </div>
+        ) : (
+          <div className="grid lg:grid-cols-3 gap-6">
+            {projects.map((project) => (
             <Card
               key={project.id}
               className={cn(
@@ -281,6 +274,7 @@ export function CapstoneView({ onBack, onAcceptProject }: CapstoneViewProps) {
             </Card>
           ))}
         </div>
+        )}
 
         {/* Back Button */}
         <div className="mt-8 text-center">
